@@ -166,7 +166,7 @@ function DentistsPage() {
     <AppShell
       title="Nha sĩ"
       subtitle="Danh sách nha sĩ đang lấy trực tiếp từ backend"
-      allowedRoles={["admin", "receptionist"]}
+      allowedRoles={["admin", "dentist", "receptionist"]}
       actions={
         can("dentists.write") ? (
           <Button

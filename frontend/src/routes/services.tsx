@@ -186,7 +186,7 @@ function ServicesPage() {
     <AppShell
       title="Dịch vụ & Ghế nha"
       subtitle="Danh mục dịch vụ và ghế nha đồng bộ từ backend"
-      allowedRoles={["admin", "cashier", "dentist", "receptionist"]}
+      allowedRoles={["admin", "dentist", "receptionist"]}
     >
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <div className="mb-4 flex items-center justify-between gap-3">

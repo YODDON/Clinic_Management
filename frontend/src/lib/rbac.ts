@@ -52,13 +52,13 @@ type AccessMap<T extends string> = Record<T, readonly UserRole[]>;
 export const routeAccess: AccessMap<AppRoutePath> = {
   "/": ["admin", "dentist"],
   "/patients": ["admin", "dentist", "receptionist"],
-  "/dentists": ["admin", "receptionist"],
+  "/dentists": ["admin", "dentist", "receptionist"],
   "/appointments": ["admin", "dentist", "receptionist"],
   "/treatment-records": ["admin", "dentist"],
   "/shifts": ["admin", "dentist"],
   "/inventory": ["admin", "dentist", "receptionist"],
-  "/services": ["admin", "cashier", "dentist", "receptionist"],
-  "/invoices": ["admin", "cashier"],
+  "/services": ["admin", "dentist", "receptionist"],
+  "/invoices": ["admin"],
 };
 
 export const permissionAccess: AccessMap<PermissionKey> = {
@@ -68,7 +68,7 @@ export const permissionAccess: AccessMap<PermissionKey> = {
   "patients.export": ["admin"],
   "patients.status": ["admin"],
   "patients.delete": ["admin"],
-  "dentists.read": ["admin", "receptionist"],
+  "dentists.read": ["admin", "dentist", "receptionist"],
   "dentists.write": ["admin"],
   "dentists.status": ["admin"],
   "dentists.delete": ["admin"],
@@ -88,18 +88,18 @@ export const permissionAccess: AccessMap<PermissionKey> = {
   "inventory.adjust": ["admin"],
   "inventory.batches": ["admin"],
   "inventory.delete": ["admin"],
-  "services.read": ["admin", "cashier", "dentist", "receptionist"],
+  "services.read": ["admin", "dentist", "receptionist"],
   "services.write": ["admin"],
   "services.chairs.write": ["admin"],
-  "invoices.read": ["admin", "cashier"],
-  "invoices.write": ["admin", "cashier"],
-  "invoices.status": ["admin", "cashier"],
-  "invoices.payment": ["admin", "cashier"],
-  "invoices.delete": ["admin", "cashier"],
+  "invoices.read": ["admin"],
+  "invoices.write": ["admin"],
+  "invoices.status": ["admin"],
+  "invoices.payment": ["admin"],
+  "invoices.delete": ["admin"],
 };
 
 export function isUserRole(role: string): role is UserRole {
-  return ["admin", "dentist", "receptionist", "cashier"].includes(role);
+  return ["admin", "dentist", "receptionist"].includes(role);
 }
 
 export function normalizeRole(role?: string | null): UserRole | null {
@@ -121,7 +121,6 @@ export function getDefaultRouteForRole(role: UserRole): AppRoutePath {
     admin: "/",
     dentist: "/",
     receptionist: "/patients",
-    cashier: "/invoices",
   };
 
   return defaults[role];

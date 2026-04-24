@@ -10,6 +10,3 @@ UPDATE users
 SET password_hash = '{noop}Reception@123'
 WHERE email = 'reception@dentalpro.local';
 
-UPDATE users
-SET password_hash = '{noop}Cashier@123'
-WHERE email = 'cashier@dentalpro.local';

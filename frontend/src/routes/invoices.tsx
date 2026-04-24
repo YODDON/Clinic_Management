@@ -245,7 +245,7 @@ function InvoicesPage() {
     <AppShell
       title="Hóa đơn"
       subtitle="Danh sách hóa đơn đồng bộ từ backend"
-      allowedRoles={["admin", "cashier"]}
+      allowedRoles={["admin"]}
       actions={
         can("invoices.write") ? (
           <Button
