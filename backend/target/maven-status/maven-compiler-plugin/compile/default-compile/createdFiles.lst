@@ -1,0 +1,11 @@
+com\dentalpro\module\portal\controller\CustomerPortalController.class
+com\dentalpro\module\portal\repository\PortalRepositoryImpl.class
+com\dentalpro\module\portal\repository\PortalRepository.class
+com\dentalpro\module\portal\service\PortalService.class
+com\dentalpro\module\auth\dto\RegisterRequest.class
+com\dentalpro\module\portal\dto\CreateCustomerAppointmentRequest.class
+com\dentalpro\module\portal\dto\PublicAvailableSlotsDto.class
+com\dentalpro\module\portal\dto\UpdateCustomerProfileRequest.class
+com\dentalpro\module\portal\service\PortalServiceImpl.class
+com\dentalpro\module\portal\dto\CustomerProfileDto.class
+com\dentalpro\module\portal\controller\PublicPortalController.class

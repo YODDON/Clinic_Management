@@ -8,6 +8,7 @@ import com.dentalpro.module.auth.dto.ChangePasswordRequest;
 import com.dentalpro.module.auth.dto.ForgotPasswordRequest;
 import com.dentalpro.module.auth.dto.LoginRequest;
 import com.dentalpro.module.auth.dto.LoginResponse;
+import com.dentalpro.module.auth.dto.RegisterRequest;
 import com.dentalpro.module.user.repository.UserRepository;
 import com.dentalpro.security.JwtTokenProvider;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @Service
 public class AuthServiceImpl implements AuthService {
@@ -29,6 +31,24 @@ public class AuthServiceImpl implements AuthService {
         this.passwordEncoder = passwordEncoder;
         this.jwtTokenProvider = jwtTokenProvider;
         this.jwtConfig = jwtConfig;
+    }
+
+    @Override
+    public LoginResponse register(RegisterRequest request) {
+        if (userRepository.emailExists(request.email())) {
+            throw new BadRequestException("Email already exists");
+        }
+
+        String userId = UUID.randomUUID().toString();
+        String patientId = UUID.randomUUID().toString();
+        String passwordHash = passwordEncoder.encode(request.password());
+
+        userRepository.insertUser(userId, request.email(), request.name(), "customer", passwordHash, request.phone());
+        userRepository.insertCustomerPatient(patientId, userId, request.name(), request.email(), request.phone());
+
+        String token = jwtTokenProvider.generateToken(request.email());
+        Map<String, Object> user = loadUserByEmail(request.email());
+        return new LoginResponse(token, token, "Bearer", jwtConfig.expirationMs() / 1000, toAuthUser(user));
     }
 
     @Override

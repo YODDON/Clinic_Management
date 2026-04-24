@@ -84,7 +84,7 @@ function toPatientPayload(values: Record<string, string>): PatientPayload {
   };
 }
 
-function PatientsPage() {
+export function PatientsPage() {
   const { can } = useRoleAccess();
   const [search, setSearch] = useState("");
   const [editingPatient, setEditingPatient] = useState<Patient | null>(null);

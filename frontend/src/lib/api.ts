@@ -4,6 +4,9 @@ import type {
   Appointment,
   AppointmentPayload,
   AuthUser,
+  CustomerAppointmentPayload,
+  CustomerProfile,
+  CustomerProfilePayload,
   DashboardStats,
   DentalChair,
   DentalChairPayload,
@@ -24,6 +27,8 @@ import type {
   PatientPayload,
   Payment,
   PaymentPayload,
+  PublicAvailableSlots,
+  RegisterPayload,
   StockBatch,
   StockBatchPayload,
   TreatmentRecord,
@@ -104,7 +109,20 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
 export const authApi = {
   login: (body: { email: string; password: string }) =>
     request<LoginResponse>("/auth/login", { method: "POST", auth: false, body }),
+  register: (body: RegisterPayload) =>
+    request<LoginResponse>("/auth/register", { method: "POST", auth: false, body }),
   me: () => request<AuthUser>("/auth/me"),
+};
+
+export const publicApi = {
+  services: (category?: string) =>
+    request<DentalService[]>("/public/services", { auth: false, query: { category } }),
+  dentists: () => request<Dentist[]>("/public/dentists", { auth: false }),
+  availableSlots: (dentistId: string, date: string) =>
+    request<PublicAvailableSlots>(`/public/dentists/${dentistId}/available-slots`, {
+      auth: false,
+      query: { date },
+    }),
 };
 
 export const dashboardApi = {
@@ -215,4 +233,16 @@ export const invoicesApi = {
     request<Invoice>(`/invoices/${id}/status`, { method: "PATCH", body: { status } }),
   delete: (id: string) => request<void>(`/invoices/${id}`, { method: "DELETE" }),
   createPayment: (body: PaymentPayload) => request<Payment>("/payments", { method: "POST", body }),
+};
+
+export const customerPortalApi = {
+  listAppointments: (status?: string) =>
+    request<PageResponse<Appointment>>("/my/appointments", { query: { status } }),
+  getAppointment: (id: string) => request<Appointment>(`/my/appointments/${id}`),
+  createAppointment: (body: CustomerAppointmentPayload) =>
+    request<Appointment>("/my/appointments", { method: "POST", body }),
+  cancelAppointment: (id: string) => request<void>(`/my/appointments/${id}`, { method: "DELETE" }),
+  getProfile: () => request<CustomerProfile>("/my/profile"),
+  updateProfile: (body: CustomerProfilePayload) =>
+    request<CustomerProfile>("/my/profile", { method: "PATCH", body }),
 };

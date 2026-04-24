@@ -1,15 +1,15 @@
 import type { UserRole } from "@/types/api";
 
 export type AppRoutePath =
-  | "/"
-  | "/patients"
-  | "/dentists"
-  | "/appointments"
-  | "/treatment-records"
-  | "/shifts"
-  | "/inventory"
-  | "/services"
-  | "/invoices";
+  | "/app/"
+  | "/app/patients"
+  | "/app/dentists"
+  | "/app/appointments"
+  | "/app/treatment-records"
+  | "/app/shifts"
+  | "/app/inventory"
+  | "/app/services"
+  | "/app/invoices";
 
 export type PermissionKey =
   | "dashboard.view"
@@ -50,15 +50,15 @@ export type PermissionKey =
 type AccessMap<T extends string> = Record<T, readonly UserRole[]>;
 
 export const routeAccess: AccessMap<AppRoutePath> = {
-  "/": ["admin", "dentist"],
-  "/patients": ["admin", "dentist", "receptionist"],
-  "/dentists": ["admin", "dentist", "receptionist"],
-  "/appointments": ["admin", "dentist", "receptionist"],
-  "/treatment-records": ["admin", "dentist"],
-  "/shifts": ["admin", "dentist"],
-  "/inventory": ["admin", "dentist", "receptionist"],
-  "/services": ["admin", "dentist", "receptionist"],
-  "/invoices": ["admin"],
+  "/app/": ["admin", "dentist"],
+  "/app/patients": ["admin", "dentist", "receptionist"],
+  "/app/dentists": ["admin", "dentist", "receptionist"],
+  "/app/appointments": ["admin", "dentist", "receptionist"],
+  "/app/treatment-records": ["admin", "dentist"],
+  "/app/shifts": ["admin", "dentist"],
+  "/app/inventory": ["admin", "dentist", "receptionist"],
+  "/app/services": ["admin", "dentist", "receptionist"],
+  "/app/invoices": ["admin"],
 };
 
 export const permissionAccess: AccessMap<PermissionKey> = {
@@ -99,7 +99,7 @@ export const permissionAccess: AccessMap<PermissionKey> = {
 };
 
 export function isUserRole(role: string): role is UserRole {
-  return ["admin", "dentist", "receptionist"].includes(role);
+  return ["admin", "dentist", "receptionist", "customer"].includes(role);
 }
 
 export function normalizeRole(role?: string | null): UserRole | null {
@@ -116,11 +116,16 @@ export function canPerform(role: UserRole, permission: PermissionKey) {
   return permissionAccess[permission].includes(role);
 }
 
-export function getDefaultRouteForRole(role: UserRole): AppRoutePath {
-  const defaults: Record<UserRole, AppRoutePath> = {
-    admin: "/",
-    dentist: "/",
-    receptionist: "/patients",
+export function isStaffRole(role: UserRole) {
+  return role !== "customer";
+}
+
+export function getDefaultRouteForRole(role: UserRole): string {
+  const defaults: Record<UserRole, string> = {
+    admin: "/app/",
+    dentist: "/app/",
+    receptionist: "/app/patients",
+    customer: "/",
   };
 
   return defaults[role];

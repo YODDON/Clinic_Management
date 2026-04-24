@@ -22,7 +22,11 @@ public class SecurityConfig {
             .cors(Customizer.withDefaults())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/v1/auth/login", "/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                .requestMatchers("/api/v1/auth/login", "/api/v1/auth/register", "/api/v1/public/**", "/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/v1/my/appointments", "/api/v1/my/appointments/*", "/api/v1/my/profile").hasRole("CUSTOMER")
+                .requestMatchers(HttpMethod.POST, "/api/v1/my/appointments").hasRole("CUSTOMER")
+                .requestMatchers(HttpMethod.DELETE, "/api/v1/my/appointments/*").hasRole("CUSTOMER")
+                .requestMatchers(HttpMethod.PATCH, "/api/v1/my/profile").hasRole("CUSTOMER")
                 .requestMatchers("/api/v1/dashboard/**").hasAnyRole("ADMIN", "DENTIST")
                 .requestMatchers("/api/v1/patients/export").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.GET, "/api/v1/patients", "/api/v1/patients/*").hasAnyRole("ADMIN", "RECEPTIONIST", "DENTIST")

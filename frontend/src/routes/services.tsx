@@ -90,7 +90,7 @@ function toChairPayload(values: Record<string, string>): DentalChairPayload {
   };
 }
 
-function ServicesPage() {
+export function ServicesPage() {
   const { can } = useRoleAccess();
   const [activeTab, setActiveTab] = useState("services");
   const [editingService, setEditingService] = useState<DentalService | null>(null);

@@ -159,7 +159,7 @@ function InventoryStatusBadge({ item }: { item: InventoryItem }) {
   );
 }
 
-function InventoryPage() {
+export function InventoryPage() {
   const { can } = useRoleAccess();
   const [search, setSearch] = useState("");
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);

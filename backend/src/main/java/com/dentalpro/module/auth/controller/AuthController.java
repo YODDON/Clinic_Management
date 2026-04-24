@@ -6,6 +6,7 @@ import com.dentalpro.module.auth.dto.ChangePasswordRequest;
 import com.dentalpro.module.auth.dto.ForgotPasswordRequest;
 import com.dentalpro.module.auth.dto.LoginRequest;
 import com.dentalpro.module.auth.dto.LoginResponse;
+import com.dentalpro.module.auth.dto.RegisterRequest;
 import com.dentalpro.module.auth.service.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.security.core.Authentication;
@@ -23,6 +24,11 @@ public class AuthController {
 
     public AuthController(AuthService authService) {
         this.authService = authService;
+    }
+
+    @PostMapping("/register")
+    public ApiResponse<LoginResponse> register(@Valid @RequestBody RegisterRequest request) {
+        return ApiResponse.ok("Register successful", authService.register(request));
     }
 
     @PostMapping("/login")

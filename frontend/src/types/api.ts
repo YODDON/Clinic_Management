@@ -1,4 +1,4 @@
-export type UserRole = "admin" | "dentist" | "receptionist";
+export type UserRole = "admin" | "dentist" | "receptionist" | "customer";
 
 export type ApiResponse<T> = {
   success: boolean;
@@ -28,6 +28,13 @@ export type LoginResponse = {
   tokenType: string;
   expiresIn: number;
   user: AuthUser;
+};
+
+export type RegisterPayload = {
+  name: string;
+  email: string;
+  password: string;
+  phone: string;
 };
 
 export type DashboardStats = {
@@ -121,6 +128,39 @@ export type AppointmentPayload = {
   appointmentType?: string;
   status?: string | null;
   notes?: string | null;
+};
+
+export type PublicAvailableSlots = {
+  dentistId: string;
+  date: string;
+  slots: string[];
+};
+
+export type CustomerAppointmentPayload = {
+  dentistId: string;
+  serviceId: string;
+  appointmentDate: string;
+  appointmentType: string;
+  notes?: string | null;
+};
+
+export type CustomerProfile = {
+  userId: string;
+  patientId: string;
+  name: string;
+  email: string;
+  phone: string;
+  dob: string | null;
+  gender: string | null;
+  address: string | null;
+};
+
+export type CustomerProfilePayload = {
+  name: string;
+  phone: string;
+  dob?: string | null;
+  gender?: string | null;
+  address?: string | null;
 };
 
 export type TreatmentRecord = {

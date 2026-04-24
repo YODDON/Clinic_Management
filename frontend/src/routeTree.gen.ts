@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as TreatmentRecordsRouteImport } from './routes/treatment-records'
 import { Route as ShiftsRouteImport } from './routes/shifts'
 import { Route as ServicesRouteImport } from './routes/services'
+import { Route as RegisterRouteImport } from './routes/register'
 import { Route as PatientsRouteImport } from './routes/patients'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as InvoicesRouteImport } from './routes/invoices'
@@ -19,6 +20,20 @@ import { Route as InventoryRouteImport } from './routes/inventory'
 import { Route as DentistsRouteImport } from './routes/dentists'
 import { Route as AppointmentsRouteImport } from './routes/appointments'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AppIndexRouteImport } from './routes/app/index'
+import { Route as MyProfileRouteImport } from './routes/my/profile'
+import { Route as MyAppointmentsRouteImport } from './routes/my/appointments'
+import { Route as AppTreatmentRecordsRouteImport } from './routes/app/treatment-records'
+import { Route as AppShiftsRouteImport } from './routes/app/shifts'
+import { Route as AppServicesRouteImport } from './routes/app/services'
+import { Route as AppPatientsRouteImport } from './routes/app/patients'
+import { Route as AppInvoicesRouteImport } from './routes/app/invoices'
+import { Route as AppInventoryRouteImport } from './routes/app/inventory'
+import { Route as AppDentistsRouteImport } from './routes/app/dentists'
+import { Route as AppAppointmentsRouteImport } from './routes/app/appointments'
+import { Route as MyAppointmentsIndexRouteImport } from './routes/my/appointments.index'
+import { Route as MyAppointmentsNewRouteImport } from './routes/my/appointments.new'
+import { Route as MyAppointmentsIdRouteImport } from './routes/my/appointments.$id'
 
 const TreatmentRecordsRoute = TreatmentRecordsRouteImport.update({
   id: '/treatment-records',
@@ -33,6 +48,11 @@ const ShiftsRoute = ShiftsRouteImport.update({
 const ServicesRoute = ServicesRouteImport.update({
   id: '/services',
   path: '/services',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RegisterRoute = RegisterRouteImport.update({
+  id: '/register',
+  path: '/register',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PatientsRoute = PatientsRouteImport.update({
@@ -70,6 +90,76 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppIndexRoute = AppIndexRouteImport.update({
+  id: '/app/',
+  path: '/app/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MyProfileRoute = MyProfileRouteImport.update({
+  id: '/my/profile',
+  path: '/my/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MyAppointmentsRoute = MyAppointmentsRouteImport.update({
+  id: '/my/appointments',
+  path: '/my/appointments',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppTreatmentRecordsRoute = AppTreatmentRecordsRouteImport.update({
+  id: '/app/treatment-records',
+  path: '/app/treatment-records',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppShiftsRoute = AppShiftsRouteImport.update({
+  id: '/app/shifts',
+  path: '/app/shifts',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppServicesRoute = AppServicesRouteImport.update({
+  id: '/app/services',
+  path: '/app/services',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppPatientsRoute = AppPatientsRouteImport.update({
+  id: '/app/patients',
+  path: '/app/patients',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppInvoicesRoute = AppInvoicesRouteImport.update({
+  id: '/app/invoices',
+  path: '/app/invoices',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppInventoryRoute = AppInventoryRouteImport.update({
+  id: '/app/inventory',
+  path: '/app/inventory',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppDentistsRoute = AppDentistsRouteImport.update({
+  id: '/app/dentists',
+  path: '/app/dentists',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppAppointmentsRoute = AppAppointmentsRouteImport.update({
+  id: '/app/appointments',
+  path: '/app/appointments',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MyAppointmentsIndexRoute = MyAppointmentsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => MyAppointmentsRoute,
+} as any)
+const MyAppointmentsNewRoute = MyAppointmentsNewRouteImport.update({
+  id: '/new',
+  path: '/new',
+  getParentRoute: () => MyAppointmentsRoute,
+} as any)
+const MyAppointmentsIdRoute = MyAppointmentsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => MyAppointmentsRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -79,9 +169,24 @@ export interface FileRoutesByFullPath {
   '/invoices': typeof InvoicesRoute
   '/login': typeof LoginRoute
   '/patients': typeof PatientsRoute
+  '/register': typeof RegisterRoute
   '/services': typeof ServicesRoute
   '/shifts': typeof ShiftsRoute
   '/treatment-records': typeof TreatmentRecordsRoute
+  '/app/appointments': typeof AppAppointmentsRoute
+  '/app/dentists': typeof AppDentistsRoute
+  '/app/inventory': typeof AppInventoryRoute
+  '/app/invoices': typeof AppInvoicesRoute
+  '/app/patients': typeof AppPatientsRoute
+  '/app/services': typeof AppServicesRoute
+  '/app/shifts': typeof AppShiftsRoute
+  '/app/treatment-records': typeof AppTreatmentRecordsRoute
+  '/my/appointments': typeof MyAppointmentsRouteWithChildren
+  '/my/profile': typeof MyProfileRoute
+  '/app/': typeof AppIndexRoute
+  '/my/appointments/$id': typeof MyAppointmentsIdRoute
+  '/my/appointments/new': typeof MyAppointmentsNewRoute
+  '/my/appointments/': typeof MyAppointmentsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -91,9 +196,23 @@ export interface FileRoutesByTo {
   '/invoices': typeof InvoicesRoute
   '/login': typeof LoginRoute
   '/patients': typeof PatientsRoute
+  '/register': typeof RegisterRoute
   '/services': typeof ServicesRoute
   '/shifts': typeof ShiftsRoute
   '/treatment-records': typeof TreatmentRecordsRoute
+  '/app/appointments': typeof AppAppointmentsRoute
+  '/app/dentists': typeof AppDentistsRoute
+  '/app/inventory': typeof AppInventoryRoute
+  '/app/invoices': typeof AppInvoicesRoute
+  '/app/patients': typeof AppPatientsRoute
+  '/app/services': typeof AppServicesRoute
+  '/app/shifts': typeof AppShiftsRoute
+  '/app/treatment-records': typeof AppTreatmentRecordsRoute
+  '/my/profile': typeof MyProfileRoute
+  '/app': typeof AppIndexRoute
+  '/my/appointments/$id': typeof MyAppointmentsIdRoute
+  '/my/appointments/new': typeof MyAppointmentsNewRoute
+  '/my/appointments': typeof MyAppointmentsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -104,9 +223,24 @@ export interface FileRoutesById {
   '/invoices': typeof InvoicesRoute
   '/login': typeof LoginRoute
   '/patients': typeof PatientsRoute
+  '/register': typeof RegisterRoute
   '/services': typeof ServicesRoute
   '/shifts': typeof ShiftsRoute
   '/treatment-records': typeof TreatmentRecordsRoute
+  '/app/appointments': typeof AppAppointmentsRoute
+  '/app/dentists': typeof AppDentistsRoute
+  '/app/inventory': typeof AppInventoryRoute
+  '/app/invoices': typeof AppInvoicesRoute
+  '/app/patients': typeof AppPatientsRoute
+  '/app/services': typeof AppServicesRoute
+  '/app/shifts': typeof AppShiftsRoute
+  '/app/treatment-records': typeof AppTreatmentRecordsRoute
+  '/my/appointments': typeof MyAppointmentsRouteWithChildren
+  '/my/profile': typeof MyProfileRoute
+  '/app/': typeof AppIndexRoute
+  '/my/appointments/$id': typeof MyAppointmentsIdRoute
+  '/my/appointments/new': typeof MyAppointmentsNewRoute
+  '/my/appointments/': typeof MyAppointmentsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -118,9 +252,24 @@ export interface FileRouteTypes {
     | '/invoices'
     | '/login'
     | '/patients'
+    | '/register'
     | '/services'
     | '/shifts'
     | '/treatment-records'
+    | '/app/appointments'
+    | '/app/dentists'
+    | '/app/inventory'
+    | '/app/invoices'
+    | '/app/patients'
+    | '/app/services'
+    | '/app/shifts'
+    | '/app/treatment-records'
+    | '/my/appointments'
+    | '/my/profile'
+    | '/app/'
+    | '/my/appointments/$id'
+    | '/my/appointments/new'
+    | '/my/appointments/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -130,9 +279,23 @@ export interface FileRouteTypes {
     | '/invoices'
     | '/login'
     | '/patients'
+    | '/register'
     | '/services'
     | '/shifts'
     | '/treatment-records'
+    | '/app/appointments'
+    | '/app/dentists'
+    | '/app/inventory'
+    | '/app/invoices'
+    | '/app/patients'
+    | '/app/services'
+    | '/app/shifts'
+    | '/app/treatment-records'
+    | '/my/profile'
+    | '/app'
+    | '/my/appointments/$id'
+    | '/my/appointments/new'
+    | '/my/appointments'
   id:
     | '__root__'
     | '/'
@@ -142,9 +305,24 @@ export interface FileRouteTypes {
     | '/invoices'
     | '/login'
     | '/patients'
+    | '/register'
     | '/services'
     | '/shifts'
     | '/treatment-records'
+    | '/app/appointments'
+    | '/app/dentists'
+    | '/app/inventory'
+    | '/app/invoices'
+    | '/app/patients'
+    | '/app/services'
+    | '/app/shifts'
+    | '/app/treatment-records'
+    | '/my/appointments'
+    | '/my/profile'
+    | '/app/'
+    | '/my/appointments/$id'
+    | '/my/appointments/new'
+    | '/my/appointments/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -155,9 +333,21 @@ export interface RootRouteChildren {
   InvoicesRoute: typeof InvoicesRoute
   LoginRoute: typeof LoginRoute
   PatientsRoute: typeof PatientsRoute
+  RegisterRoute: typeof RegisterRoute
   ServicesRoute: typeof ServicesRoute
   ShiftsRoute: typeof ShiftsRoute
   TreatmentRecordsRoute: typeof TreatmentRecordsRoute
+  AppAppointmentsRoute: typeof AppAppointmentsRoute
+  AppDentistsRoute: typeof AppDentistsRoute
+  AppInventoryRoute: typeof AppInventoryRoute
+  AppInvoicesRoute: typeof AppInvoicesRoute
+  AppPatientsRoute: typeof AppPatientsRoute
+  AppServicesRoute: typeof AppServicesRoute
+  AppShiftsRoute: typeof AppShiftsRoute
+  AppTreatmentRecordsRoute: typeof AppTreatmentRecordsRoute
+  MyAppointmentsRoute: typeof MyAppointmentsRouteWithChildren
+  MyProfileRoute: typeof MyProfileRoute
+  AppIndexRoute: typeof AppIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -181,6 +371,13 @@ declare module '@tanstack/react-router' {
       path: '/services'
       fullPath: '/services'
       preLoaderRoute: typeof ServicesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/register': {
+      id: '/register'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof RegisterRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/patients': {
@@ -232,8 +429,122 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/app/': {
+      id: '/app/'
+      path: '/app'
+      fullPath: '/app/'
+      preLoaderRoute: typeof AppIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/my/profile': {
+      id: '/my/profile'
+      path: '/my/profile'
+      fullPath: '/my/profile'
+      preLoaderRoute: typeof MyProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/my/appointments': {
+      id: '/my/appointments'
+      path: '/my/appointments'
+      fullPath: '/my/appointments'
+      preLoaderRoute: typeof MyAppointmentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app/treatment-records': {
+      id: '/app/treatment-records'
+      path: '/app/treatment-records'
+      fullPath: '/app/treatment-records'
+      preLoaderRoute: typeof AppTreatmentRecordsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app/shifts': {
+      id: '/app/shifts'
+      path: '/app/shifts'
+      fullPath: '/app/shifts'
+      preLoaderRoute: typeof AppShiftsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app/services': {
+      id: '/app/services'
+      path: '/app/services'
+      fullPath: '/app/services'
+      preLoaderRoute: typeof AppServicesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app/patients': {
+      id: '/app/patients'
+      path: '/app/patients'
+      fullPath: '/app/patients'
+      preLoaderRoute: typeof AppPatientsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app/invoices': {
+      id: '/app/invoices'
+      path: '/app/invoices'
+      fullPath: '/app/invoices'
+      preLoaderRoute: typeof AppInvoicesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app/inventory': {
+      id: '/app/inventory'
+      path: '/app/inventory'
+      fullPath: '/app/inventory'
+      preLoaderRoute: typeof AppInventoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app/dentists': {
+      id: '/app/dentists'
+      path: '/app/dentists'
+      fullPath: '/app/dentists'
+      preLoaderRoute: typeof AppDentistsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app/appointments': {
+      id: '/app/appointments'
+      path: '/app/appointments'
+      fullPath: '/app/appointments'
+      preLoaderRoute: typeof AppAppointmentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/my/appointments/': {
+      id: '/my/appointments/'
+      path: '/'
+      fullPath: '/my/appointments/'
+      preLoaderRoute: typeof MyAppointmentsIndexRouteImport
+      parentRoute: typeof MyAppointmentsRoute
+    }
+    '/my/appointments/new': {
+      id: '/my/appointments/new'
+      path: '/new'
+      fullPath: '/my/appointments/new'
+      preLoaderRoute: typeof MyAppointmentsNewRouteImport
+      parentRoute: typeof MyAppointmentsRoute
+    }
+    '/my/appointments/$id': {
+      id: '/my/appointments/$id'
+      path: '/$id'
+      fullPath: '/my/appointments/$id'
+      preLoaderRoute: typeof MyAppointmentsIdRouteImport
+      parentRoute: typeof MyAppointmentsRoute
+    }
   }
 }
+
+interface MyAppointmentsRouteChildren {
+  MyAppointmentsIdRoute: typeof MyAppointmentsIdRoute
+  MyAppointmentsNewRoute: typeof MyAppointmentsNewRoute
+  MyAppointmentsIndexRoute: typeof MyAppointmentsIndexRoute
+}
+
+const MyAppointmentsRouteChildren: MyAppointmentsRouteChildren = {
+  MyAppointmentsIdRoute: MyAppointmentsIdRoute,
+  MyAppointmentsNewRoute: MyAppointmentsNewRoute,
+  MyAppointmentsIndexRoute: MyAppointmentsIndexRoute,
+}
+
+const MyAppointmentsRouteWithChildren = MyAppointmentsRoute._addFileChildren(
+  MyAppointmentsRouteChildren,
+)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
@@ -243,9 +554,21 @@ const rootRouteChildren: RootRouteChildren = {
   InvoicesRoute: InvoicesRoute,
   LoginRoute: LoginRoute,
   PatientsRoute: PatientsRoute,
+  RegisterRoute: RegisterRoute,
   ServicesRoute: ServicesRoute,
   ShiftsRoute: ShiftsRoute,
   TreatmentRecordsRoute: TreatmentRecordsRoute,
+  AppAppointmentsRoute: AppAppointmentsRoute,
+  AppDentistsRoute: AppDentistsRoute,
+  AppInventoryRoute: AppInventoryRoute,
+  AppInvoicesRoute: AppInvoicesRoute,
+  AppPatientsRoute: AppPatientsRoute,
+  AppServicesRoute: AppServicesRoute,
+  AppShiftsRoute: AppShiftsRoute,
+  AppTreatmentRecordsRoute: AppTreatmentRecordsRoute,
+  MyAppointmentsRoute: MyAppointmentsRouteWithChildren,
+  MyProfileRoute: MyProfileRoute,
+  AppIndexRoute: AppIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

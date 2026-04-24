@@ -33,23 +33,23 @@ type NavItem = {
   icon: React.ComponentType<{ className?: string }>;
 };
 
-const overview: NavItem[] = [{ title: "Tổng quan", url: "/", icon: LayoutDashboard }];
+const overview: NavItem[] = [{ title: "Tong quan", url: "/app/", icon: LayoutDashboard }];
 
 const operations: NavItem[] = [
-  { title: "Lịch hẹn", url: "/appointments", icon: CalendarDays },
-  { title: "Bệnh nhân", url: "/patients", icon: Users },
-  { title: "Hồ sơ điều trị", url: "/treatment-records", icon: ClipboardList },
+  { title: "Lich hen", url: "/app/appointments", icon: CalendarDays },
+  { title: "Benh nhan", url: "/app/patients", icon: Users },
+  { title: "Ho so dieu tri", url: "/app/treatment-records", icon: ClipboardList },
 ];
 
 const clinic: NavItem[] = [
-  { title: "Nha sĩ", url: "/dentists", icon: Stethoscope },
-  { title: "Ca trực", url: "/shifts", icon: CalendarClock },
-  { title: "Dịch vụ & Ghế nha", url: "/services", icon: Briefcase },
+  { title: "Nha si", url: "/app/dentists", icon: Stethoscope },
+  { title: "Ca truc", url: "/app/shifts", icon: CalendarClock },
+  { title: "Dich vu & Ghe nha", url: "/app/services", icon: Briefcase },
 ];
 
 const finance: NavItem[] = [
-  { title: "Kho vật tư", url: "/inventory", icon: Package },
-  { title: "Hóa đơn", url: "/invoices", icon: Receipt },
+  { title: "Kho vat tu", url: "/app/inventory", icon: Package },
+  { title: "Hoa don", url: "/app/invoices", icon: Receipt },
 ];
 
 function NavGroup({ label, items }: { label: string; items: NavItem[] }) {
@@ -69,7 +69,11 @@ function NavGroup({ label, items }: { label: string; items: NavItem[] }) {
       <SidebarGroupContent>
         <SidebarMenu>
           {visibleItems.map((item) => {
-            const active = item.url === "/" ? pathname === "/" : pathname.startsWith(item.url);
+            const active =
+              item.url === "/app/"
+                ? pathname === "/app/" || pathname === "/app"
+                : pathname.startsWith(item.url);
+
             return (
               <SidebarMenuItem key={item.url}>
                 <SidebarMenuButton
@@ -96,7 +100,7 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader className="border-sidebar-border border-b">
-        <Link to="/" className="flex items-center gap-2 px-2 py-3">
+        <Link to="/app/" className="flex items-center gap-2 px-2 py-3">
           <div className="bg-sidebar-primary text-sidebar-primary-foreground flex h-9 w-9 items-center justify-center rounded-lg">
             <Activity className="h-5 w-5" />
           </div>
@@ -109,14 +113,14 @@ export function AppSidebar() {
         </Link>
       </SidebarHeader>
       <SidebarContent>
-        <NavGroup label="Tổng quan" items={overview} />
-        <NavGroup label="Vận hành" items={operations} />
-        <NavGroup label="Phòng khám" items={clinic} />
-        <NavGroup label="Tài chính & Kho" items={finance} />
+        <NavGroup label="Tong quan" items={overview} />
+        <NavGroup label="Van hanh" items={operations} />
+        <NavGroup label="Phong kham" items={clinic} />
+        <NavGroup label="Tai chinh & Kho" items={finance} />
       </SidebarContent>
       <SidebarFooter className="border-sidebar-border border-t">
         <div className="text-sidebar-foreground/50 px-2 py-1 text-[11px] group-data-[collapsible=icon]:hidden">
-          v1.0 · Core
+          v1.0 · Staff App
         </div>
       </SidebarFooter>
     </Sidebar>

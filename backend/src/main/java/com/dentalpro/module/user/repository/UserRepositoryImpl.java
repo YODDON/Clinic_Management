@@ -36,6 +36,28 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
+    public boolean emailExists(String email) {
+        Integer count = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM users WHERE email = ?", Integer.class, email);
+        return count != null && count > 0;
+    }
+
+    @Override
+    public void insertUser(String id, String email, String name, String role, String passwordHash, String phone) {
+        jdbcTemplate.update("""
+            INSERT INTO users (id, email, name, role, password_hash, phone, is_active)
+            VALUES (?, ?, ?, ?, ?, ?, true)
+            """, id, email, name, role, passwordHash, phone);
+    }
+
+    @Override
+    public void insertCustomerPatient(String patientId, String userId, String name, String email, String phone) {
+        jdbcTemplate.update("""
+            INSERT INTO patients (id, user_id, name, email, phone, is_active)
+            VALUES (?, ?, ?, ?, ?, true)
+            """, patientId, userId, name, email, phone);
+    }
+
+    @Override
     public void updatePassword(String email, String passwordHash) {
         jdbcTemplate.update("UPDATE users SET password_hash = ? WHERE email = ?", passwordHash, email);
     }

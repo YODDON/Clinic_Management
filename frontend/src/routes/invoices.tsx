@@ -125,7 +125,7 @@ function parseInvoiceItems(value: string): InvoiceItemInput[] {
   return parsed;
 }
 
-function InvoicesPage() {
+export function InvoicesPage() {
   const { can } = useRoleAccess();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");

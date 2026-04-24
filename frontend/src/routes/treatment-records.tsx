@@ -175,7 +175,7 @@ function validateToothChartInput(value?: string) {
   }
 }
 
-function TreatmentRecordsPage() {
+export function TreatmentRecordsPage() {
   const { can } = useRoleAccess();
   const [search, setSearch] = useState("");
   const [editingRecord, setEditingRecord] = useState<TreatmentRecord | null>(null);

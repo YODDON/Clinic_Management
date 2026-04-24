@@ -80,7 +80,7 @@ function toShiftPayload(values: Record<string, string>): DentistShiftPayload {
   };
 }
 
-function ShiftsPage() {
+export function ShiftsPage() {
   const { can, session } = useRoleAccess();
   const [editingShift, setEditingShift] = useState<DentistShift | null>(null);
   const [detailShift, setDetailShift] = useState<DentistShift | null>(null);

@@ -139,7 +139,7 @@ function toAppointmentPayload(values: Record<string, string>): AppointmentPayloa
   };
 }
 
-function AppointmentsPage() {
+export function AppointmentsPage() {
   const { can } = useRoleAccess();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");

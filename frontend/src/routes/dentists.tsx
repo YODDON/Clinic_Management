@@ -92,7 +92,7 @@ function toDentistPayload(values: Record<string, string>, editing: boolean): Den
   };
 }
 
-function DentistsPage() {
+export function DentistsPage() {
   const { can } = useRoleAccess();
   const [search, setSearch] = useState("");
   const [editingDentist, setEditingDentist] = useState<Dentist | null>(null);

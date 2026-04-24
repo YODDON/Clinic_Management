@@ -93,3 +93,5 @@ coverage/
 *.sqlite
 *.sqlite3
 
+# Documentation files
+*.md
