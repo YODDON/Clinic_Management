@@ -139,7 +139,6 @@ export function ShiftsPage() {
   return (
     <AppShell
       title="Ca trực"
-      subtitle="Lịch làm việc nha sĩ đang được đồng bộ từ backend"
       allowedRoles={["admin", "dentist"]}
       actions={
         can("shifts.create") ? (

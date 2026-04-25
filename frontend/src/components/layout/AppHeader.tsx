@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 
-export function AppHeader({ title, subtitle }: { title: string; subtitle?: string }) {
+export function AppHeader({ title }: { title: string; subtitle?: string }) {
   const session = useSession();
   const navigate = useNavigate();
 
@@ -25,7 +25,6 @@ export function AppHeader({ title, subtitle }: { title: string; subtitle?: strin
       <Separator orientation="vertical" className="h-6" />
       <div className="min-w-0 flex-1">
         <h1 className="font-display truncate text-lg font-semibold leading-tight">{title}</h1>
-        {subtitle && <p className="text-muted-foreground truncate text-xs">{subtitle}</p>}
       </div>
       <div className="relative hidden md:block">
         <Search className="text-muted-foreground absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2" />

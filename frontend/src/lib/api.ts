@@ -27,6 +27,7 @@ import type {
   PatientPayload,
   Payment,
   PaymentPayload,
+  PublicAvailableDates,
   PublicAvailableSlots,
   RegisterPayload,
   StockBatch,
@@ -118,6 +119,8 @@ export const publicApi = {
   services: (category?: string) =>
     request<DentalService[]>("/public/services", { auth: false, query: { category } }),
   dentists: () => request<Dentist[]>("/public/dentists", { auth: false }),
+  availableDates: (dentistId: string) =>
+    request<PublicAvailableDates>(`/public/dentists/${dentistId}/available-dates`, { auth: false }),
   availableSlots: (dentistId: string, date: string) =>
     request<PublicAvailableSlots>(`/public/dentists/${dentistId}/available-slots`, {
       auth: false,

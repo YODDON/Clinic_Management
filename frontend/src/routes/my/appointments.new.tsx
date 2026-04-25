@@ -1,8 +1,8 @@
 import type { ReactNode } from "react";
 import { useEffect, useMemo, useState } from "react";
-import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { format } from "date-fns";
+import { format, isValid, parseISO } from "date-fns";
 import { vi } from "date-fns/locale";
 import {
   ArrowLeft,
@@ -15,9 +15,6 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
-import { customerPortalApi, publicApi } from "@/lib/api";
-import { formatCurrency } from "@/lib/format";
-import { cn } from "@/lib/utils";
 import { CustomerShell } from "@/components/layout/CustomerShell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -26,21 +23,34 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
+import { customerPortalApi, publicApi } from "@/lib/api";
+import { formatCurrency } from "@/lib/format";
+import { cn } from "@/lib/utils";
 import type { DentalService, Dentist } from "@/types/api";
 
 type Step = 1 | 2 | 3;
 
-const STEP_LABELS = ["Chọn dịch vụ", "Chọn nha sĩ & thời gian", "Xác nhận"];
+const STEP_LABELS = ["Chọn dịch vụ", "Chọn nha sĩ và thời gian", "Xác nhận"];
+
+function parseDateValue(value?: string | null) {
+  if (!value) return undefined;
+  const parsed = parseISO(value);
+  return isValid(parsed) ? parsed : undefined;
+}
 
 export const Route = createFileRoute("/my/appointments/new")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    serviceId: typeof search.serviceId === "string" ? search.serviceId : "",
+  }),
   component: NewAppointmentPage,
   head: () => ({ meta: [{ title: "Đặt lịch mới | DentalPro" }] }),
 });
 
 function NewAppointmentPage() {
+  const search = Route.useSearch();
   const navigate = useNavigate();
   const [step, setStep] = useState<Step>(1);
-  const [serviceId, setServiceId] = useState("");
+  const [serviceId, setServiceId] = useState(search.serviceId);
   const [dentistId, setDentistId] = useState("");
   const [date, setDate] = useState<Date | undefined>();
   const [slot, setSlot] = useState("");
@@ -54,25 +64,58 @@ function NewAppointmentPage() {
     queryKey: ["public", "dentists"],
     queryFn: publicApi.dentists,
   });
-  const slotsQuery = useQuery({
-    queryKey: ["public", "slots", dentistId, date ? format(date, "yyyy-MM-dd") : ""],
-    queryFn: () => publicApi.availableSlots(dentistId, format(date as Date, "yyyy-MM-dd")),
-    enabled: Boolean(dentistId && date),
+  const availableDatesQuery = useQuery({
+    queryKey: ["public", "available-dates", dentistId],
+    queryFn: () => publicApi.availableDates(dentistId),
+    enabled: Boolean(dentistId),
   });
+  const slotsQuery = useQuery({
+    queryKey: ["public", "slots", dentistId, date && isValid(date) ? format(date, "yyyy-MM-dd") : ""],
+    queryFn: () => publicApi.availableSlots(dentistId, format(date as Date, "yyyy-MM-dd")),
+    enabled: Boolean(dentistId && date && isValid(date)),
+  });
+
+  const services = servicesQuery.data || [];
+  const dentists = dentistsQuery.data || [];
+  const availableDates = availableDatesQuery.data?.dates || [];
+  const slots = slotsQuery.data?.slots ?? null;
 
   useEffect(() => {
     setSlot("");
   }, [dentistId, date]);
 
+  useEffect(() => {
+    if (search.serviceId) {
+      setServiceId(search.serviceId);
+      setStep(1);
+    }
+  }, [search.serviceId]);
+
+  useEffect(() => {
+    if (!dentistId) return;
+
+    if (availableDates.length === 0) {
+      setDate(undefined);
+      setSlot("");
+      return;
+    }
+
+    const selectedDate = date && isValid(date) ? format(date, "yyyy-MM-dd") : "";
+    if (!selectedDate || !availableDates.includes(selectedDate)) {
+      setDate(parseDateValue(availableDates[0]));
+      setSlot("");
+    }
+  }, [availableDates, date, dentistId]);
+
   const selectedService = useMemo(
-    () => (servicesQuery.data || []).find((service) => service.id === serviceId),
-    [serviceId, servicesQuery.data],
+    () => services.find((service) => service.id === serviceId),
+    [serviceId, services],
   );
   const selectedDentist = useMemo(
-    () => (dentistsQuery.data || []).find((dentist) => dentist.id === dentistId),
-    [dentistId, dentistsQuery.data],
+    () => dentists.find((dentist) => dentist.id === dentistId),
+    [dentistId, dentists],
   );
-  const canNext = step === 1 ? !!serviceId : step === 2 ? !!dentistId && !!date && !!slot : true;
+  const canNext = step === 1 ? !!serviceId : step === 2 ? !!dentistId && !!date && isValid(date) && !!slot : true;
 
   const createMutation = useMutation({
     mutationFn: customerPortalApi.createAppointment,
@@ -84,7 +127,7 @@ function NewAppointmentPage() {
   });
 
   const submit = async () => {
-    if (!selectedService || !selectedDentist || !date || !slot) return;
+    if (!selectedService || !selectedDentist || !date || !isValid(date) || !slot) return;
 
     await createMutation.mutateAsync({
       serviceId: selectedService.id,
@@ -107,7 +150,7 @@ function NewAppointmentPage() {
 
       {step === 1 && (
         <ServiceStep
-          services={servicesQuery.data || []}
+          services={services}
           loading={servicesQuery.isLoading}
           value={serviceId}
           onChange={setServiceId}
@@ -116,19 +159,21 @@ function NewAppointmentPage() {
 
       {step === 2 && (
         <DentistDateStep
-          dentists={dentistsQuery.data || []}
+          dentists={dentists}
           dentistId={dentistId}
           onDentistChange={setDentistId}
           date={date}
           onDateChange={setDate}
-          slots={slotsQuery.data?.slots ?? null}
+          availableDates={availableDates}
+          loadingDates={availableDatesQuery.isLoading}
+          slots={slots}
           loadingSlots={slotsQuery.isLoading}
           slot={slot}
           onSlotChange={setSlot}
         />
       )}
 
-      {step === 3 && selectedService && selectedDentist && date && (
+      {step === 3 && selectedService && selectedDentist && date && isValid(date) && (
         <ConfirmStep
           service={selectedService}
           dentist={selectedDentist}
@@ -145,7 +190,7 @@ function NewAppointmentPage() {
           onClick={() => (step === 1 ? void navigate({ to: "/my/appointments" }) : setStep((step - 1) as Step))}
         >
           <ArrowLeft className="h-4 w-4" />
-          {step === 1 ? "Huỷ" : "Quay lại"}
+          {step === 1 ? "Hủy" : "Quay lại"}
         </Button>
         {step < 3 ? (
           <Button onClick={() => canNext && setStep((step + 1) as Step)} disabled={!canNext}>
@@ -258,6 +303,8 @@ function DentistDateStep({
   onDentistChange,
   date,
   onDateChange,
+  availableDates,
+  loadingDates,
   slots,
   loadingSlots,
   slot,
@@ -268,6 +315,8 @@ function DentistDateStep({
   onDentistChange: (id: string) => void;
   date?: Date;
   onDateChange: (date?: Date) => void;
+  availableDates: string[];
+  loadingDates: boolean;
   slots: string[] | null;
   loadingSlots: boolean;
   slot: string;
@@ -318,7 +367,7 @@ function DentistDateStep({
               <PopoverTrigger asChild>
                 <Button variant="outline" className={cn("w-full justify-start font-normal", !date && "text-muted-foreground")}>
                   <CalendarIcon className="h-4 w-4" />
-                  {date ? format(date, "EEEE, dd/MM/yyyy", { locale: vi }) : "Chọn ngày hẹn"}
+                  {date && isValid(date) ? format(date, "EEEE, dd/MM/yyyy", { locale: vi }) : "Chọn ngày hẹn"}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
@@ -329,7 +378,9 @@ function DentistDateStep({
                   disabled={(day) => {
                     const today = new Date();
                     today.setHours(0, 0, 0, 0);
-                    return day < today;
+                    if (day < today) return true;
+                    if (availableDates.length === 0) return true;
+                    return !availableDates.includes(format(day, "yyyy-MM-dd"));
                   }}
                   initialFocus
                   locale={vi}
@@ -337,29 +388,47 @@ function DentistDateStep({
                 />
               </PopoverContent>
             </Popover>
-            <p className="mt-2 text-xs text-muted-foreground">Không thể đặt ngày trong quá khứ.</p>
+            {loadingDates ? (
+              <p className="mt-2 text-xs text-muted-foreground">Đang tải các ngày bác sĩ có ca trực...</p>
+            ) : availableDates.length > 0 ? (
+              <p className="mt-2 text-xs text-muted-foreground">
+                Chỉ chọn được ngày có ca trực. Ngày mở lịch gần nhất: {availableDates.slice(0, 3).join(", ")}
+              </p>
+            ) : (
+              <p className="mt-2 text-xs text-destructive">Bác sĩ này hiện chưa có ca trực để customer đặt online.</p>
+            )}
           </div>
 
           <div>
             <h3 className="mb-3 text-sm font-semibold">3. Khung giờ trống</h3>
-            {!date && (
+            {loadingDates && (
+              <div className="rounded-md border border-dashed border-border bg-secondary/30 p-6 text-center text-sm text-muted-foreground">
+                Đang kiểm tra lịch trực của bác sĩ
+              </div>
+            )}
+            {!loadingDates && availableDates.length === 0 && (
+              <div className="rounded-md border border-dashed border-border bg-secondary/30 p-6 text-center text-sm text-muted-foreground">
+                Bác sĩ này chưa có ngày mở lịch để customer đặt online.
+              </div>
+            )}
+            {!loadingDates && availableDates.length > 0 && (!date || !isValid(date)) && (
               <div className="rounded-md border border-dashed border-border bg-secondary/30 p-6 text-center text-sm text-muted-foreground">
                 Vui lòng chọn ngày trước
               </div>
             )}
-            {date && loadingSlots && (
+            {date && isValid(date) && !loadingDates && loadingSlots && (
               <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
                 {[1, 2, 3, 4, 5, 6, 7, 8].map((item) => (
                   <Skeleton key={item} className="h-9" />
                 ))}
               </div>
             )}
-            {date && !loadingSlots && slots !== null && slots.length === 0 && (
+            {date && isValid(date) && !loadingDates && !loadingSlots && slots !== null && slots.length === 0 && (
               <div className="rounded-md border border-dashed border-border bg-secondary/30 p-6 text-center text-sm text-muted-foreground">
                 Nha sĩ không có lịch trống ngày này. Vui lòng chọn ngày khác.
               </div>
             )}
-            {date && !loadingSlots && slots && slots.length > 0 && (
+            {date && isValid(date) && !loadingDates && !loadingSlots && slots && slots.length > 0 && (
               <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
                 {slots.map((value) => {
                   const selected = slot === value;

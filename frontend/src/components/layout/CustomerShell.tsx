@@ -33,10 +33,7 @@ function SidebarContent({ pathname, onNavigate }: { pathname: string; onNavigate
         <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
           <Stethoscope className="h-5 w-5" />
         </div>
-        <div className="leading-tight">
-          <p className="text-base font-bold">DentalPro</p>
-          <p className="text-[10px] opacity-70">Customer Portal</p>
-        </div>
+        <p className="text-base font-bold">DentalPro</p>
       </Link>
 
       <nav className="flex-1 space-y-1 p-3">
@@ -151,7 +148,6 @@ export function CustomerShell({
 
           <div className="min-w-0 flex-1">
             <h1 className="truncate text-lg font-bold leading-tight">{title}</h1>
-            {subtitle && <p className="truncate text-xs text-muted-foreground">{subtitle}</p>}
           </div>
           {actions}
         </header>

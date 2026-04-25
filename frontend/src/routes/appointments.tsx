@@ -234,7 +234,6 @@ export function AppointmentsPage() {
   return (
     <AppShell
       title="Lịch hẹn"
-      subtitle="Lịch hẹn được đồng bộ từ API backend"
       allowedRoles={["admin", "dentist", "receptionist"]}
       actions={
         can("appointments.create") ? (

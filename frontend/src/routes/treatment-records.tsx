@@ -243,7 +243,6 @@ export function TreatmentRecordsPage() {
   return (
     <AppShell
       title="Hồ sơ điều trị"
-      subtitle="Lịch sử điều trị và chẩn đoán đang được đồng bộ từ backend"
       allowedRoles={["admin", "dentist"]}
       actions={
         can("treatmentRecords.write") ? (

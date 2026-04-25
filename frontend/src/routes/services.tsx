@@ -185,7 +185,6 @@ export function ServicesPage() {
   return (
     <AppShell
       title="Dịch vụ & Ghế nha"
-      subtitle="Danh mục dịch vụ và ghế nha đồng bộ từ backend"
       allowedRoles={["admin", "dentist", "receptionist"]}
     >
       <Tabs value={activeTab} onValueChange={setActiveTab}>

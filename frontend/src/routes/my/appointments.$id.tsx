@@ -39,7 +39,6 @@ function AppointmentDetailPage() {
     <CustomerShell
       pathname={`/my/appointments/${id}`}
       title="Chi tiết lịch hẹn"
-      subtitle="Trang này phản ánh đúng dữ liệu appointment của customer trong hệ thống dùng chung với V1."
       actions={
         appointment?.status === "pending" ? (
           <Button variant="destructive" onClick={() => void cancelMutation.mutateAsync()}>
@@ -61,7 +60,7 @@ function AppointmentDetailPage() {
                 <InfoRow icon={<Clock className="h-4 w-4" />} label="Loại lịch hẹn" value={appointment.appointmentType} />
                 <InfoRow icon={<Stethoscope className="h-4 w-4" />} label="Dịch vụ" value={appointment.serviceName || "Chưa cập nhật"} />
                 <InfoRow icon={<Stethoscope className="h-4 w-4" />} label="Nha sĩ" value={appointment.dentistName || "Đang chờ phân công"} />
-                <InfoRow icon={<MapPin className="h-4 w-4" />} label="Ghế nha" value={appointment.chairName || "Lễ tân sẽ gán khi confirm"} />
+                <InfoRow icon={<MapPin className="h-4 w-4" />} label="Ghế nha" value={appointment.chairName || "Chưa cập nhật"} />
                 <InfoRow icon={<Stethoscope className="h-4 w-4" />} label="Bệnh nhân" value={appointment.patientName} />
               </div>
               <div className="rounded-lg border border-border bg-secondary/40 p-4">
@@ -74,17 +73,7 @@ function AppointmentDetailPage() {
           <Card className="h-fit border-primary/30 bg-accent/40">
             <CardContent className="space-y-4 p-5">
               <div>
-                <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Gợi ý nghiệp vụ
-                </div>
-                <div className="mt-2 text-sm text-muted-foreground">
-                  Nếu lịch đang ở trạng thái `pending`, staff V1 sẽ tiếp nhận và xác nhận. Khi đã `confirmed`, customer không còn quyền huỷ theo rule V2.
-                </div>
-              </div>
-              <div>
-                <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Giá dịch vụ
-                </div>
+                <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Giá dịch vụ</div>
                 <div className="mt-1 text-2xl font-bold text-primary">
                   {appointment.serviceName ? "Xem theo service catalog" : formatCurrency(0)}
                 </div>
@@ -103,7 +92,10 @@ function AppointmentDetailPage() {
 function InfoRow({ icon, label, value }: { icon: ReactNode; label: string; value: string }) {
   return (
     <div className="rounded-lg border border-border p-4">
-      <div className="flex items-center gap-2 text-primary">{icon}<span className="text-xs uppercase tracking-wide text-muted-foreground">{label}</span></div>
+      <div className="flex items-center gap-2 text-primary">
+        {icon}
+        <span className="text-xs uppercase tracking-wide text-muted-foreground">{label}</span>
+      </div>
       <div className="mt-2 font-semibold">{value}</div>
     </div>
   );

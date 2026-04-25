@@ -93,5 +93,5 @@ coverage/
 *.sqlite
 *.sqlite3
 
-# Documentation files
-*.md
+# Generated route manifests (commit only if your workflow requires deterministic routing output)
+# frontend/src/routeTree.gen.ts

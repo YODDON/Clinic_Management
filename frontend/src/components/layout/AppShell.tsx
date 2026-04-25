@@ -47,7 +47,7 @@ export function AppShell({ title, subtitle, actions, children, allowedRoles }: A
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset className="bg-background">
-        <AppHeader title={title} subtitle={subtitle} />
+        <AppHeader title={title} />
         <main className="flex-1 p-4 md:p-6">
           {actions && (
             <div className="mb-5 flex flex-wrap items-center justify-end gap-2">{actions}</div>

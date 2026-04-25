@@ -7,6 +7,7 @@ import com.dentalpro.module.appointment.dto.AppointmentDto;
 import com.dentalpro.module.dentist.dto.DentistDto;
 import com.dentalpro.module.portal.dto.CreateCustomerAppointmentRequest;
 import com.dentalpro.module.portal.dto.CustomerProfileDto;
+import com.dentalpro.module.portal.dto.PublicAvailableDatesDto;
 import com.dentalpro.module.portal.dto.PublicAvailableSlotsDto;
 import com.dentalpro.module.portal.dto.UpdateCustomerProfileRequest;
 import com.dentalpro.module.portal.repository.PortalRepository;
@@ -44,16 +45,25 @@ public class PortalServiceImpl implements PortalService {
     }
 
     @Override
+    public PublicAvailableDatesDto getAvailableDates(String dentistId) {
+        return new PublicAvailableDatesDto(dentistId, portalRepository.findAvailableShiftDates(dentistId));
+    }
+
+    @Override
     public PublicAvailableSlotsDto getAvailableSlots(String dentistId, String date) {
         LocalDate targetDate = LocalDate.parse(date);
         Set<String> slots = new LinkedHashSet<>();
+        LocalDate today = LocalDate.now();
+        LocalTime now = LocalTime.now().withSecond(0).withNano(0);
 
         for (String range : portalRepository.findShiftTimeRanges(dentistId, date)) {
             String[] parts = range.split("\\|");
             LocalTime start = LocalTime.parse(parts[0]);
             LocalTime end = LocalTime.parse(parts[1]);
             while (start.isBefore(end)) {
-                slots.add(start.format(SLOT_FORMAT));
+                if (!targetDate.equals(today) || start.isAfter(now)) {
+                    slots.add(start.format(SLOT_FORMAT));
+                }
                 start = start.plusMinutes(30);
             }
         }
@@ -82,13 +92,13 @@ public class PortalServiceImpl implements PortalService {
         CustomerProfileDto profile = requireProfile(email);
         LocalDateTime appointmentDate = LocalDateTime.parse(request.appointmentDate());
         if (appointmentDate.isBefore(LocalDateTime.now())) {
-            throw new BadRequestException("Cannot book an appointment in the past");
+            throw new BadRequestException("Khung giờ này đã qua. Vui lòng chọn giờ khác.");
         }
 
         String slot = appointmentDate.toLocalTime().format(SLOT_FORMAT);
         PublicAvailableSlotsDto availableSlots = getAvailableSlots(request.dentistId(), appointmentDate.toLocalDate().toString());
         if (!availableSlots.slots().contains(slot)) {
-            throw new BadRequestException("Selected slot is no longer available");
+            throw new BadRequestException("Khung giờ đã chọn không còn khả dụng.");
         }
 
         String id = UUID.randomUUID().toString();

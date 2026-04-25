@@ -53,7 +53,6 @@ function MyAppointmentsPage() {
     <CustomerShell
       pathname="/my/appointments"
       title="Lịch hẹn của tôi"
-      subtitle="Theo dõi và quản lý các lịch hẹn nha khoa được tạo từ customer portal."
       actions={
         <Button asChild>
           <Link to="/my/appointments/new">
@@ -81,10 +80,7 @@ function MyAppointmentsPage() {
         <TabsContent value="upcoming" className="mt-5 space-y-4">
           {appointmentsQuery.isLoading && <ListSkeleton />}
           {!appointmentsQuery.isLoading && upcoming.length === 0 && (
-            <EmptyState
-              title="Chưa có lịch hẹn sắp tới"
-              description="Đặt lịch ngay để được chăm sóc bởi đội ngũ bác sĩ chuyên khoa."
-            />
+            <EmptyState title="Chưa có lịch hẹn sắp tới" description="Đặt lịch ngay." />
           )}
           {upcoming.map((appointment) => (
             <AppointmentCard
@@ -98,10 +94,7 @@ function MyAppointmentsPage() {
         <TabsContent value="history" className="mt-5 space-y-4">
           {appointmentsQuery.isLoading && <ListSkeleton />}
           {!appointmentsQuery.isLoading && history.length === 0 && (
-            <EmptyState
-              title="Chưa có lịch sử"
-              description="Các lịch đã hoàn thành hoặc huỷ sẽ hiển thị tại đây."
-            />
+            <EmptyState title="Chưa có lịch sử" description="Các lịch đã hoàn thành hoặc huỷ sẽ hiển thị tại đây." />
           )}
           {history.map((appointment) => (
             <AppointmentCard key={appointment.id} appointment={appointment} />
@@ -114,9 +107,7 @@ function MyAppointmentsPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Huỷ lịch hẹn?</AlertDialogTitle>
             <AlertDialogDescription>
-              Lịch hẹn lúc{" "}
-              <strong>{cancelTarget ? formatDateTime(cancelTarget.appointmentDate) : ""}</strong> sẽ bị huỷ.
-              Theo business rule V2, customer chỉ được huỷ khi trạng thái vẫn là `pending`.
+              Lịch hẹn lúc <strong>{cancelTarget ? formatDateTime(cancelTarget.appointmentDate) : ""}</strong> sẽ bị huỷ.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -155,9 +146,7 @@ function AppointmentCard({
             <div className="mt-3 grid gap-2 text-sm sm:grid-cols-2">
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Stethoscope className="h-4 w-4 shrink-0 text-primary" />
-                <span className="truncate">
-                  {appointment.dentistName || "Chưa phân bác sĩ"}
-                </span>
+                <span className="truncate">{appointment.dentistName || "Chưa phân bác sĩ"}</span>
               </div>
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Clock className="h-4 w-4 shrink-0 text-primary" />

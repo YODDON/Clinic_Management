@@ -5,6 +5,7 @@ com\dentalpro\module\portal\service\PortalService.class
 com\dentalpro\module\auth\dto\RegisterRequest.class
 com\dentalpro\module\portal\dto\CreateCustomerAppointmentRequest.class
 com\dentalpro\module\portal\dto\PublicAvailableSlotsDto.class
+com\dentalpro\module\portal\dto\PublicAvailableDatesDto.class
 com\dentalpro\module\portal\dto\UpdateCustomerProfileRequest.class
 com\dentalpro\module\portal\service\PortalServiceImpl.class
 com\dentalpro\module\portal\dto\CustomerProfileDto.class

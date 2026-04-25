@@ -43,9 +43,21 @@ public class PortalRepositoryImpl implements PortalRepository {
     }
 
     @Override
+    public List<String> findAvailableShiftDates(String dentistId) {
+        return jdbcTemplate.query("""
+            SELECT DISTINCT DATE_FORMAT(shift_date, '%Y-%m-%d') AS shift_date
+            FROM dentist_shifts
+            WHERE dentist_id = ?
+              AND shift_date >= CURRENT_DATE()
+              AND status <> 'off'
+            ORDER BY shift_date
+            """, (rs, rowNum) -> rs.getString("shift_date"), dentistId);
+    }
+
+    @Override
     public List<String> findShiftTimeRanges(String dentistId, String date) {
         return jdbcTemplate.query("""
-            SELECT CONCAT(TIME_FORMAT(start_time, '%%H:%%i'), '|', TIME_FORMAT(end_time, '%%H:%%i')) AS slot_range
+            SELECT CONCAT(TIME_FORMAT(start_time, '%H:%i'), '|', TIME_FORMAT(end_time, '%H:%i')) AS slot_range
             FROM dentist_shifts
             WHERE dentist_id = ? AND shift_date = ? AND status <> 'off'
             ORDER BY start_time
@@ -55,7 +67,7 @@ public class PortalRepositoryImpl implements PortalRepository {
     @Override
     public List<String> findBookedTimes(String dentistId, String date) {
         return jdbcTemplate.query("""
-            SELECT TIME_FORMAT(appointment_date, '%%H:%%i') AS booked_time
+            SELECT TIME_FORMAT(appointment_date, '%H:%i') AS booked_time
             FROM appointments
             WHERE dentist_id = ?
               AND DATE(appointment_date) = ?

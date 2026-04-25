@@ -74,6 +74,7 @@ D:\WORK\Clinic_Management\backend\src\main\java\com\dentalpro\module\portal\cont
 D:\WORK\Clinic_Management\backend\src\main\java\com\dentalpro\module\portal\controller\PublicPortalController.java
 D:\WORK\Clinic_Management\backend\src\main\java\com\dentalpro\module\portal\dto\CreateCustomerAppointmentRequest.java
 D:\WORK\Clinic_Management\backend\src\main\java\com\dentalpro\module\portal\dto\CustomerProfileDto.java
+D:\WORK\Clinic_Management\backend\src\main\java\com\dentalpro\module\portal\dto\PublicAvailableDatesDto.java
 D:\WORK\Clinic_Management\backend\src\main\java\com\dentalpro\module\portal\dto\PublicAvailableSlotsDto.java
 D:\WORK\Clinic_Management\backend\src\main\java\com\dentalpro\module\portal\dto\UpdateCustomerProfileRequest.java
 D:\WORK\Clinic_Management\backend\src\main\java\com\dentalpro\module\portal\repository\PortalRepository.java

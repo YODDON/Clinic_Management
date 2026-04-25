@@ -136,6 +136,11 @@ export type PublicAvailableSlots = {
   slots: string[];
 };
 
+export type PublicAvailableDates = {
+  dentistId: string;
+  dates: string[];
+};
+
 export type CustomerAppointmentPayload = {
   dentistId: string;
   serviceId: string;

@@ -253,7 +253,6 @@ export function InventoryPage() {
   return (
     <AppShell
       title="Kho vật tư"
-      subtitle="Số liệu tồn kho đang được đồng bộ từ backend"
       allowedRoles={["admin", "dentist", "receptionist"]}
       actions={
         <>

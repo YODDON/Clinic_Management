@@ -2,6 +2,7 @@ package com.dentalpro.module.portal.controller;
 
 import com.dentalpro.common.ApiResponse;
 import com.dentalpro.module.dentist.dto.DentistDto;
+import com.dentalpro.module.portal.dto.PublicAvailableDatesDto;
 import com.dentalpro.module.portal.dto.PublicAvailableSlotsDto;
 import com.dentalpro.module.portal.service.PortalService;
 import com.dentalpro.module.service_catalog.dto.DentalServiceDto;
@@ -30,6 +31,11 @@ public class PublicPortalController {
     @GetMapping("/dentists")
     public ApiResponse<List<DentistDto>> getDentists() {
         return ApiResponse.ok("Public dentists fetched", portalService.getPublicDentists());
+    }
+
+    @GetMapping("/dentists/{id}/available-dates")
+    public ApiResponse<PublicAvailableDatesDto> getAvailableDates(@PathVariable String id) {
+        return ApiResponse.ok("Available dates fetched", portalService.getAvailableDates(id));
     }
 
     @GetMapping("/dentists/{id}/available-slots")

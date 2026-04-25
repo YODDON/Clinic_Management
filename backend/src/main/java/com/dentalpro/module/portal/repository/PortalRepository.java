@@ -10,6 +10,7 @@ import java.util.List;
 public interface PortalRepository {
     List<DentalServiceDto> findPublicServices(String category);
     List<DentistDto> findPublicDentists();
+    List<String> findAvailableShiftDates(String dentistId);
     List<String> findShiftTimeRanges(String dentistId, String date);
     List<String> findBookedTimes(String dentistId, String date);
     CustomerProfileDto findCustomerProfileByEmail(String email);

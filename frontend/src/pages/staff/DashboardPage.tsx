@@ -38,7 +38,6 @@ export function StaffDashboardPage() {
   return (
     <AppShell
       title="Tong quan"
-      subtitle="So lieu dashboard dang duoc dong bo truc tiep tu backend"
       allowedRoles={["admin", "dentist"]}
     >
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -75,7 +74,6 @@ export function StaffDashboardPage() {
         <PageSection
           className="lg:col-span-2"
           title="Lich hen sap toi"
-          description="Preview endpoint /appointments"
         >
           <QueryState
             isLoading={appointmentsQuery.isLoading}
@@ -113,7 +111,7 @@ export function StaffDashboardPage() {
           </QueryState>
         </PageSection>
 
-        <PageSection title="Ton kho thap" description="Preview endpoint /inventory/low-stock">
+        <PageSection title="Ton kho thap">
           <QueryState
             isLoading={lowStockQuery.isLoading}
             error={lowStockQuery.error}
@@ -145,7 +143,7 @@ export function StaffDashboardPage() {
       </div>
 
       <div className="mt-6">
-        <PageSection title="Tai chinh nhanh" description="So lieu tong hop tu dashboard endpoint">
+        <PageSection title="Tai chinh nhanh">
           <div className="grid gap-4 md:grid-cols-3">
             <StatCard
               label="Hoa don pending"

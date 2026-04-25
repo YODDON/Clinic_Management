@@ -2,10 +2,6 @@ import { useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { Calendar, LogOut, Menu, Stethoscope, User as UserIcon, X } from "lucide-react";
 
-import { useSession } from "@/hooks/use-session";
-import { clearSession } from "@/lib/session";
-import { getDefaultRouteForRole, normalizeRole } from "@/lib/rbac";
-import { initials } from "@/lib/format";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,6 +12,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useSession } from "@/hooks/use-session";
+import { initials } from "@/lib/format";
+import { getBookingRouteForRole, getDefaultRouteForRole, normalizeRole } from "@/lib/rbac";
+import { clearSession } from "@/lib/session";
 
 const navItems = [
   { href: "#hero", label: "Trang chủ" },
@@ -29,15 +29,7 @@ export function PublicNavbar() {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const role = normalizeRole(session?.user.role);
-
-  const handleBooking = async () => {
-    if (!role) {
-      await navigate({ to: "/register" });
-      return;
-    }
-
-    await navigate({ to: getDefaultRouteForRole(role) as never });
-  };
+  const bookingHref = role ? getBookingRouteForRole(role) : "/register";
 
   const logout = async () => {
     clearSession();
@@ -70,7 +62,11 @@ export function PublicNavbar() {
         </nav>
 
         <div className="hidden items-center gap-2 md:flex">
-          <Button variant="default" onClick={() => void handleBooking()} className="shadow-[0_14px_40px_-18px_hsl(from_var(--color-primary)_h_s_l_/_0.45)]">
+          <Button
+            variant="default"
+            className="shadow-[0_14px_40px_-18px_rgba(13,148,136,0.45)]"
+            onClick={() => void navigate({ to: bookingHref as never })}
+          >
             <Calendar className="h-4 w-4" />
             Đặt lịch ngay
           </Button>
@@ -79,7 +75,7 @@ export function PublicNavbar() {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="ml-1 rounded-full">
                   <Avatar className="h-9 w-9">
-                    <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
+                    <AvatarFallback className="bg-primary/10 text-sm font-semibold text-primary">
                       {initials(session.user.name)}
                     </AvatarFallback>
                   </Avatar>
@@ -97,7 +93,8 @@ export function PublicNavbar() {
                       <Calendar className="h-4 w-4" /> Lịch hẹn của tôi
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => void navigate({ to: "/my/profile" })}>
-                      <UserIcon className="h-4 w-4" /> Hồ sơ cá nhân
+                      <User as={UserIcon} />
+                      Hồ sơ cá nhân
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                   </>
@@ -144,7 +141,7 @@ export function PublicNavbar() {
               {item.label}
             </a>
           ))}
-          <Button onClick={() => void handleBooking()} className="mt-2">
+          <Button className="mt-2" onClick={() => void navigate({ to: bookingHref as never })}>
             <Calendar className="h-4 w-4" /> Đặt lịch ngay
           </Button>
           {!session && (
@@ -161,4 +158,8 @@ export function PublicNavbar() {
       </div>
     </header>
   );
+}
+
+function User({ as: Icon }: { as: typeof UserIcon }) {
+  return <Icon className="h-4 w-4" />;
 }

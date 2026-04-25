@@ -158,7 +158,6 @@ export function PatientsPage() {
   return (
     <AppShell
       title="Bệnh nhân"
-      subtitle="Danh sách bệnh nhân đồng bộ trực tiếp từ backend"
       allowedRoles={["admin", "dentist", "receptionist"]}
       actions={
         <>

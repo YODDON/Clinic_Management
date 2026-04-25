@@ -130,3 +130,14 @@ export function getDefaultRouteForRole(role: UserRole): string {
 
   return defaults[role];
 }
+
+export function getBookingRouteForRole(role: UserRole): string {
+  const defaults: Record<UserRole, string> = {
+    admin: "/app/appointments",
+    dentist: "/app/appointments",
+    receptionist: "/app/appointments",
+    customer: "/my/appointments/new",
+  };
+
+  return defaults[role];
+}
