@@ -1,9 +1,10 @@
-﻿import { useDeferredValue, useState } from "react";
+import { useDeferredValue, useEffect, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { Download, Eye, Filter, Pencil, Plus, Power, Trash2, Users } from "lucide-react";
 import { toast } from "sonner";
 
+import { ClientPagination } from "@/components/common/ClientPagination";
 import { ConfirmActionDialog } from "@/components/common/ConfirmActionDialog";
 import { DetailDialog } from "@/components/common/DetailDialog";
 import { CrudFormDialog } from "@/components/common/CrudFormDialog";
@@ -83,10 +84,11 @@ function toPatientPayload(values: Record<string, string>): PatientPayload {
     dentalNotes: values.dentalNotes || null,
   };
 }
-
 export function PatientsPage() {
-  const { can } = useRoleAccess();
   const [search, setSearch] = useState("");
+  const pageSize = 10;
+  const [page, setPage] = useState(1);
+  const { can } = useRoleAccess();
   const [editingPatient, setEditingPatient] = useState<Patient | null>(null);
   const [detailPatient, setDetailPatient] = useState<Patient | null>(null);
   const [formOpen, setFormOpen] = useState(false);
@@ -98,6 +100,19 @@ export function PatientsPage() {
     queryKey: ["patients", deferredSearch],
     queryFn: async () => (await patientsApi.list(deferredSearch)).content,
   });
+  const patients = patientsQuery.data || [];
+  const totalPages = Math.max(1, Math.ceil(patients.length / pageSize));
+  const paginatedPatients = patients.slice((page - 1) * pageSize, page * pageSize);
+
+  useEffect(() => {
+    setPage(1);
+  }, [deferredSearch]);
+
+  useEffect(() => {
+    if (page > totalPages) {
+      setPage(totalPages);
+    }
+  }, [page, totalPages]);
 
   const refreshPatients = async () => {
     await queryClient.invalidateQueries({ queryKey: ["patients"] });
@@ -158,7 +173,7 @@ export function PatientsPage() {
   return (
     <AppShell
       title="Bệnh nhân"
-      allowedRoles={["admin", "dentist", "receptionist"]}
+      allowedRoles={["admin", "dentist"]}
       actions={
         <>
           {can("patients.export") && (
@@ -212,7 +227,7 @@ export function PatientsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {(patientsQuery.data || []).map((patient) => (
+              {paginatedPatients.map((patient) => (
                 <TableRow key={patient.id}>
                   <TableCell>
                     <div className="font-medium">{patient.name}</div>
@@ -278,6 +293,12 @@ export function PatientsPage() {
               ))}
             </TableBody>
           </Table>
+          <ClientPagination
+            page={page}
+            totalItems={patients.length}
+            pageSize={pageSize}
+            onPageChange={setPage}
+          />
         </QueryState>
       </PageSection>
 

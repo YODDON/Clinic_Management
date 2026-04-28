@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -66,18 +66,26 @@ export function CrudFormDialog({
 }: CrudFormDialogProps) {
   const [internalValues, setInternalValues] = useState<Record<string, string>>(initialValues);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const wasOpenRef = useRef(false);
   const isControlled = controlledValues !== undefined;
   const resolvedValues = isControlled ? controlledValues : internalValues;
 
   useEffect(() => {
-    if (!open) return;
+    if (open && !wasOpenRef.current) {
+      if (!isControlled) {
+        setInternalValues(initialValues);
+      }
 
-    if (!isControlled) {
-      setInternalValues(initialValues);
+      onValuesChange?.(initialValues);
+      setErrors({});
+      wasOpenRef.current = true;
+      return;
     }
 
-    onValuesChange?.(initialValues);
-    setErrors({});
+    if (!open) {
+      wasOpenRef.current = false;
+      setErrors({});
+    }
   }, [initialValues, isControlled, onValuesChange, open]);
 
   const validateField = (field: CrudField, values: Record<string, string>) => {

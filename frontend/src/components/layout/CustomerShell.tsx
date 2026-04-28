@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { useEffect } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Calendar, CalendarPlus, LogOut, Menu, Stethoscope, User as UserIcon } from "lucide-react";
+import { Calendar, CalendarPlus, LogOut, Menu, Receipt, Stethoscope, User as UserIcon } from "lucide-react";
 
 import { useSession } from "@/hooks/use-session";
 import { clearSession } from "@/lib/session";
@@ -15,6 +15,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 const items = [
   { to: "/my/appointments", label: "Lịch hẹn của tôi", icon: Calendar },
   { to: "/my/appointments/new", label: "Đặt lịch mới", icon: CalendarPlus },
+  { to: "/my/invoices", label: "Hóa đơn của tôi", icon: Receipt },
   { to: "/my/profile", label: "Hồ sơ cá nhân", icon: UserIcon },
 ];
 

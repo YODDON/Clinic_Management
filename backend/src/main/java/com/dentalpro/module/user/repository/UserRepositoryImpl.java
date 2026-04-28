@@ -26,6 +26,25 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
+    public List<UserDto> findManagedStaff() {
+        return jdbcTemplate.query("""
+            SELECT id, name, email, role, phone, is_active
+            FROM users
+            WHERE role = 'admin'
+            ORDER BY created_at DESC
+            """, this::mapRow);
+    }
+
+    @Override
+    public List<UserDto> findById(String id) {
+        return jdbcTemplate.query(
+            "SELECT id, name, email, role, phone, is_active FROM users WHERE id = ?",
+            this::mapRow,
+            id
+        );
+    }
+
+    @Override
     public List<Map<String, Object>> findAccountRowsByEmail(String email, boolean onlyActive) {
         String sql = """
             SELECT id, email, name, role, phone, avatar_url, password_hash, is_active
@@ -42,11 +61,46 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
+    public boolean emailExistsForOther(String email, String id) {
+        Integer count = jdbcTemplate.queryForObject(
+            "SELECT COUNT(*) FROM users WHERE email = ? AND id <> ?",
+            Integer.class,
+            email,
+            id
+        );
+        return count != null && count > 0;
+    }
+
+    @Override
     public void insertUser(String id, String email, String name, String role, String passwordHash, String phone) {
         jdbcTemplate.update("""
             INSERT INTO users (id, email, name, role, password_hash, phone, is_active)
             VALUES (?, ?, ?, ?, ?, ?, true)
             """, id, email, name, role, passwordHash, phone);
+    }
+
+    @Override
+    public void updateUser(String id, String email, String name, String role, String passwordHash, String phone, Boolean active) {
+        jdbcTemplate.update("""
+            UPDATE users
+            SET email = COALESCE(?, email),
+                name = COALESCE(?, name),
+                role = COALESCE(?, role),
+                password_hash = COALESCE(?, password_hash),
+                phone = COALESCE(?, phone),
+                is_active = COALESCE(?, is_active)
+            WHERE id = ?
+            """, email, name, role, passwordHash, phone, active, id);
+    }
+
+    @Override
+    public void updateStatus(String id, boolean active) {
+        jdbcTemplate.update("UPDATE users SET is_active = ? WHERE id = ?", active, id);
+    }
+
+    @Override
+    public void deleteUser(String id) {
+        jdbcTemplate.update("DELETE FROM users WHERE id = ?", id);
     }
 
     @Override

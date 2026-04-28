@@ -2,6 +2,7 @@ import type { UserRole } from "@/types/api";
 
 export type AppRoutePath =
   | "/app/"
+  | "/app/system"
   | "/app/patients"
   | "/app/dentists"
   | "/app/appointments"
@@ -13,6 +14,9 @@ export type AppRoutePath =
 
 export type PermissionKey =
   | "dashboard.view"
+  | "users.read"
+  | "users.write"
+  | "users.status"
   | "patients.read"
   | "patients.write"
   | "patients.export"
@@ -43,6 +47,7 @@ export type PermissionKey =
   | "services.chairs.write"
   | "invoices.read"
   | "invoices.write"
+  | "invoices.fromTreatment"
   | "invoices.status"
   | "invoices.payment"
   | "invoices.delete";
@@ -51,31 +56,35 @@ type AccessMap<T extends string> = Record<T, readonly UserRole[]>;
 
 export const routeAccess: AccessMap<AppRoutePath> = {
   "/app/": ["admin", "dentist"],
-  "/app/patients": ["admin", "dentist", "receptionist"],
-  "/app/dentists": ["admin", "dentist", "receptionist"],
-  "/app/appointments": ["admin", "dentist", "receptionist"],
+  "/app/system": ["admin"],
+  "/app/patients": ["admin", "dentist"],
+  "/app/dentists": ["admin", "dentist"],
+  "/app/appointments": ["admin", "dentist"],
   "/app/treatment-records": ["admin", "dentist"],
   "/app/shifts": ["admin", "dentist"],
-  "/app/inventory": ["admin", "dentist", "receptionist"],
-  "/app/services": ["admin", "dentist", "receptionist"],
-  "/app/invoices": ["admin"],
+  "/app/inventory": ["admin", "dentist"],
+  "/app/services": ["admin", "dentist"],
+  "/app/invoices": ["admin", "dentist"],
 };
 
 export const permissionAccess: AccessMap<PermissionKey> = {
   "dashboard.view": ["admin", "dentist"],
-  "patients.read": ["admin", "dentist", "receptionist"],
-  "patients.write": ["admin", "receptionist"],
+  "users.read": ["admin"],
+  "users.write": ["admin"],
+  "users.status": ["admin"],
+  "patients.read": ["admin", "dentist"],
+  "patients.write": ["admin"],
   "patients.export": ["admin"],
   "patients.status": ["admin"],
   "patients.delete": ["admin"],
-  "dentists.read": ["admin", "dentist", "receptionist"],
+  "dentists.read": ["admin", "dentist"],
   "dentists.write": ["admin"],
   "dentists.status": ["admin"],
   "dentists.delete": ["admin"],
-  "appointments.read": ["admin", "dentist", "receptionist"],
-  "appointments.create": ["admin", "receptionist"],
-  "appointments.update": ["admin", "dentist", "receptionist"],
-  "appointments.delete": ["admin", "receptionist"],
+  "appointments.read": ["admin", "dentist"],
+  "appointments.create": ["admin"],
+  "appointments.update": ["admin", "dentist"],
+  "appointments.delete": ["admin"],
   "treatmentRecords.read": ["admin", "dentist"],
   "treatmentRecords.write": ["admin", "dentist"],
   "treatmentRecords.delete": ["admin", "dentist"],
@@ -83,23 +92,24 @@ export const permissionAccess: AccessMap<PermissionKey> = {
   "shifts.create": ["admin"],
   "shifts.update": ["admin", "dentist"],
   "shifts.delete": ["admin"],
-  "inventory.read": ["admin", "dentist", "receptionist"],
+  "inventory.read": ["admin", "dentist"],
   "inventory.write": ["admin"],
   "inventory.adjust": ["admin"],
   "inventory.batches": ["admin"],
   "inventory.delete": ["admin"],
-  "services.read": ["admin", "dentist", "receptionist"],
+  "services.read": ["admin", "dentist"],
   "services.write": ["admin"],
   "services.chairs.write": ["admin"],
-  "invoices.read": ["admin"],
+  "invoices.read": ["admin", "dentist"],
   "invoices.write": ["admin"],
+  "invoices.fromTreatment": ["admin", "dentist"],
   "invoices.status": ["admin"],
   "invoices.payment": ["admin"],
   "invoices.delete": ["admin"],
 };
 
 export function isUserRole(role: string): role is UserRole {
-  return ["admin", "dentist", "receptionist", "customer"].includes(role);
+  return ["admin", "dentist", "customer"].includes(role);
 }
 
 export function normalizeRole(role?: string | null): UserRole | null {
@@ -124,7 +134,6 @@ export function getDefaultRouteForRole(role: UserRole): string {
   const defaults: Record<UserRole, string> = {
     admin: "/app/",
     dentist: "/app/",
-    receptionist: "/app/patients",
     customer: "/",
   };
 
@@ -135,7 +144,6 @@ export function getBookingRouteForRole(role: UserRole): string {
   const defaults: Record<UserRole, string> = {
     admin: "/app/appointments",
     dentist: "/app/appointments",
-    receptionist: "/app/appointments",
     customer: "/my/appointments/new",
   };
 

@@ -7,8 +7,8 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
@@ -23,7 +23,7 @@ public class SecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/v1/auth/login", "/api/v1/auth/register", "/api/v1/public/**", "/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/v1/my/appointments", "/api/v1/my/appointments/*", "/api/v1/my/profile").hasRole("CUSTOMER")
+                .requestMatchers(HttpMethod.GET, "/api/v1/my/appointments", "/api/v1/my/appointments/*", "/api/v1/my/profile", "/api/v1/my/invoices", "/api/v1/my/invoices/*", "/api/v1/my/invoices/*/items", "/api/v1/my/invoices/*/payments").hasRole("CUSTOMER")
                 .requestMatchers(HttpMethod.POST, "/api/v1/my/appointments").hasRole("CUSTOMER")
                 .requestMatchers(HttpMethod.DELETE, "/api/v1/my/appointments/*").hasRole("CUSTOMER")
                 .requestMatchers(HttpMethod.PATCH, "/api/v1/my/profile").hasRole("CUSTOMER")
@@ -54,21 +54,23 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/v1/treatment-records", "/api/v1/treatment-records/*", "/api/v1/treatment-records/*/materials").hasAnyRole("ADMIN", "DENTIST")
                 .requestMatchers(HttpMethod.POST, "/api/v1/treatment-records", "/api/v1/treatment-records/*/materials").hasAnyRole("ADMIN", "DENTIST")
                 .requestMatchers(HttpMethod.PATCH, "/api/v1/treatment-records/*").hasAnyRole("ADMIN", "DENTIST")
-                .requestMatchers(HttpMethod.DELETE, "/api/v1/treatment-records/*").hasAnyRole("ADMIN", "DENTIST")
+                .requestMatchers(HttpMethod.DELETE, "/api/v1/treatment-records/*", "/api/v1/treatment-records/*/materials/*").hasAnyRole("ADMIN", "DENTIST")
 
                 .requestMatchers(HttpMethod.GET, "/api/v1/inventory", "/api/v1/inventory/low-stock", "/api/v1/inventory/*", "/api/v1/inventory/*/batches").hasAnyRole("ADMIN", "RECEPTIONIST", "DENTIST")
                 .requestMatchers(HttpMethod.POST, "/api/v1/inventory", "/api/v1/inventory/batches", "/api/v1/inventory/*/adjust-stock").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.PATCH, "/api/v1/inventory/*").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.DELETE, "/api/v1/inventory/*").hasRole("ADMIN")
 
-                .requestMatchers(HttpMethod.GET, "/api/v1/services", "/api/v1/services/*", "/api/v1/services/chairs", "/api/v1/services/chairs/*").hasAnyRole("ADMIN", "RECEPTIONIST", "DENTIST")
-                .requestMatchers(HttpMethod.POST, "/api/v1/services", "/api/v1/services/*/activate", "/api/v1/services/chairs").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.PATCH, "/api/v1/services/*", "/api/v1/services/chairs/*").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.GET, "/api/v1/services", "/api/v1/services/*", "/api/v1/services/*/price-history", "/api/v1/services/chairs", "/api/v1/services/chairs/*").hasAnyRole("ADMIN", "RECEPTIONIST", "DENTIST")
+                .requestMatchers(HttpMethod.POST, "/api/v1/services", "/api/v1/services/*/activate", "/api/v1/services/*/deactivate", "/api/v1/services/chairs").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.PATCH, "/api/v1/services/*", "/api/v1/services/*/price", "/api/v1/services/chairs/*").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.DELETE, "/api/v1/services/*", "/api/v1/services/chairs/*").hasRole("ADMIN")
 
-                .requestMatchers(HttpMethod.GET, "/api/v1/invoices", "/api/v1/invoices/*", "/api/v1/invoices/*/items", "/api/v1/invoices/*/payments").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.POST, "/api/v1/invoices", "/api/v1/payments").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.PATCH, "/api/v1/invoices/*/status").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.GET, "/api/v1/invoices", "/api/v1/invoices/*", "/api/v1/invoices/*/items", "/api/v1/invoices/*/payments").hasAnyRole("ADMIN", "RECEPTIONIST", "DENTIST")
+                .requestMatchers(HttpMethod.POST, "/api/v1/invoices").hasAnyRole("ADMIN", "RECEPTIONIST")
+                .requestMatchers(HttpMethod.POST, "/api/v1/invoices/treatment-records/*").hasAnyRole("ADMIN", "DENTIST")
+                .requestMatchers(HttpMethod.POST, "/api/v1/payments").hasAnyRole("ADMIN", "RECEPTIONIST")
+                .requestMatchers(HttpMethod.PATCH, "/api/v1/invoices/*/status").hasAnyRole("ADMIN", "RECEPTIONIST")
                 .requestMatchers(HttpMethod.DELETE, "/api/v1/invoices/*").hasRole("ADMIN")
 
                 .requestMatchers("/api/v1/users/**").hasRole("ADMIN")

@@ -1,9 +1,10 @@
-﻿import { useDeferredValue, useState } from "react";
+import { useDeferredValue, useEffect, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { Eye, Pencil, Plus, Power, Stethoscope, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
+import { ClientPagination } from "@/components/common/ClientPagination";
 import { ConfirmActionDialog } from "@/components/common/ConfirmActionDialog";
 import { DetailDialog } from "@/components/common/DetailDialog";
 import { CrudFormDialog } from "@/components/common/CrudFormDialog";
@@ -34,6 +35,7 @@ export const Route = createFileRoute("/dentists")({
 
 function buildDentistFields(isEditing: boolean) {
   return [
+    { name: "employeeCode", label: "Mã bác sĩ" },
     { name: "name", label: "Họ và tên", required: true },
     { name: "email", label: "Email", type: "email" as const, required: true },
     {
@@ -45,6 +47,9 @@ function buildDentistFields(isEditing: boolean) {
         : "Bắt buộc khi tạo mới nha sĩ.",
     },
     { name: "phone", label: "Số điện thoại" },
+    { name: "dob", label: "Ngày sinh", type: "date" as const },
+    { name: "workplace", label: "Nơi công tác" },
+    { name: "degree", label: "Bằng cấp / học vị" },
     { name: "specialization", label: "Chuyên môn", required: true },
     { name: "licenseNumber", label: "Số chứng chỉ", required: true },
     { name: "yearsExperience", label: "Số năm kinh nghiệm", type: "number" as const },
@@ -64,10 +69,14 @@ function buildDentistFields(isEditing: boolean) {
 
 function toDentistValues(dentist?: Dentist) {
   return {
+    employeeCode: dentist?.employeeCode ?? "",
     name: dentist?.name ?? "",
     email: dentist?.email ?? "",
     password: "",
     phone: dentist?.phone ?? "",
+    dob: dentist?.dob ? dentist.dob.slice(0, 10) : "",
+    workplace: dentist?.workplace ?? "",
+    degree: dentist?.degree ?? "",
     specialization: dentist?.specialization ?? "",
     licenseNumber: dentist?.licenseNumber ?? "",
     yearsExperience: dentist?.yearsExperience?.toString() ?? "",
@@ -79,10 +88,14 @@ function toDentistValues(dentist?: Dentist) {
 
 function toDentistPayload(values: Record<string, string>, editing: boolean): DentistPayload {
   return {
+    employeeCode: values.employeeCode || undefined,
     name: values.name,
     email: values.email,
     password: values.password || (editing ? undefined : ""),
     phone: values.phone || null,
+    dob: values.dob || null,
+    workplace: values.workplace || null,
+    degree: values.degree || null,
     specialization: values.specialization,
     licenseNumber: values.licenseNumber,
     yearsExperience: values.yearsExperience ? Number(values.yearsExperience) : null,
@@ -91,10 +104,11 @@ function toDentistPayload(values: Record<string, string>, editing: boolean): Den
     available: values.available ? values.available === "true" : undefined,
   };
 }
-
 export function DentistsPage() {
-  const { can } = useRoleAccess();
   const [search, setSearch] = useState("");
+  const pageSize = 10;
+  const [page, setPage] = useState(1);
+  const { can } = useRoleAccess();
   const [editingDentist, setEditingDentist] = useState<Dentist | null>(null);
   const [detailDentist, setDetailDentist] = useState<Dentist | null>(null);
   const [formOpen, setFormOpen] = useState(false);
@@ -116,6 +130,19 @@ export function DentistsPage() {
       dentist.licenseNumber.toLowerCase().includes(keyword)
     );
   });
+
+  const totalPages = Math.max(1, Math.ceil(dentists.length / pageSize));
+  const paginatedDentists = dentists.slice((page - 1) * pageSize, page * pageSize);
+
+  useEffect(() => {
+    setPage(1);
+  }, [deferredSearch]);
+
+  useEffect(() => {
+    if (page > totalPages) {
+      setPage(totalPages);
+    }
+  }, [page, totalPages]);
 
   const refreshDentists = async () => {
     await queryClient.invalidateQueries({ queryKey: ["dentists"] });
@@ -165,7 +192,7 @@ export function DentistsPage() {
   return (
     <AppShell
       title="Nha sĩ"
-      allowedRoles={["admin", "dentist", "receptionist"]}
+      allowedRoles={["admin", "dentist"]}
       actions={
         can("dentists.write") ? (
           <Button
@@ -199,7 +226,10 @@ export function DentistsPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Nha sĩ</TableHead>
+                <TableHead>Mã</TableHead>
+                <TableHead>Ngày sinh</TableHead>
                 <TableHead>Chuyên môn</TableHead>
+                <TableHead>Bằng cấp</TableHead>
                 <TableHead>Số chứng chỉ</TableHead>
                 <TableHead>Kinh nghiệm</TableHead>
                 <TableHead>Phí tư vấn</TableHead>
@@ -208,13 +238,16 @@ export function DentistsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {dentists.map((dentist) => (
+              {paginatedDentists.map((dentist) => (
                 <TableRow key={dentist.id}>
                   <TableCell>
                     <div className="font-medium">{dentist.name}</div>
                     <div className="text-xs text-muted-foreground">{dentist.email}</div>
                   </TableCell>
+                  <TableCell>{dentist.employeeCode}</TableCell>
+                  <TableCell>{dentist.dob ? dentist.dob.slice(0, 10) : "Chưa cập nhật"}</TableCell>
                   <TableCell>{dentist.specialization}</TableCell>
+                  <TableCell>{dentist.degree || "Chưa cập nhật"}</TableCell>
                   <TableCell>{dentist.licenseNumber}</TableCell>
                   <TableCell>{dentist.yearsExperience} năm</TableCell>
                   <TableCell>{formatCurrency(dentist.consultationFee)}</TableCell>
@@ -276,6 +309,12 @@ export function DentistsPage() {
               ))}
             </TableBody>
           </Table>
+          <ClientPagination
+            page={page}
+            totalItems={dentists.length}
+            pageSize={pageSize}
+            onPageChange={setPage}
+          />
         </QueryState>
       </PageSection>
 
@@ -305,10 +344,14 @@ export function DentistsPage() {
           detailDentist
             ? [
                 { label: "Email", value: detailDentist.email },
+                { label: "Mã bác sĩ", value: detailDentist.employeeCode },
                 {
                   label: "Số điện thoại",
                   value: detailDentist.phone || "Chưa cập nhật",
                 },
+                { label: "Ngày sinh", value: detailDentist.dob || "Chưa cập nhật" },
+                { label: "Nơi công tác", value: detailDentist.workplace || "Chưa cập nhật" },
+                { label: "Bằng cấp", value: detailDentist.degree || "Chưa cập nhật" },
                 { label: "Chuyên môn", value: detailDentist.specialization },
                 { label: "Số chứng chỉ", value: detailDentist.licenseNumber },
                 { label: "Kinh nghiệm", value: `${detailDentist.yearsExperience} năm` },

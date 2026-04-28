@@ -10,6 +10,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -23,13 +24,13 @@ public class PatientController {
     }
 
     @GetMapping
-    public ApiResponse<PageResponse<PatientDto>> getPatients(@RequestParam(required = false) String search) {
-        return ApiResponse.ok("Patients fetched", patientService.getPatients(search));
+    public ApiResponse<PageResponse<PatientDto>> getPatients(Authentication authentication, @RequestParam(required = false) String search) {
+        return ApiResponse.ok("Patients fetched", patientService.getPatients(authentication.getName(), search));
     }
 
     @GetMapping("/{id}")
-    public ApiResponse<PatientDto> getPatient(@PathVariable String id) {
-        return ApiResponse.ok("Patient fetched", patientService.getPatient(id));
+    public ApiResponse<PatientDto> getPatient(Authentication authentication, @PathVariable String id) {
+        return ApiResponse.ok("Patient fetched", patientService.getPatient(authentication.getName(), id));
     }
 
     @PostMapping
@@ -59,10 +60,10 @@ public class PatientController {
     }
 
     @GetMapping("/export")
-    public ResponseEntity<String> export() {
+    public ResponseEntity<String> export(Authentication authentication) {
         return ResponseEntity.ok()
             .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=patients.csv")
             .contentType(MediaType.TEXT_PLAIN)
-            .body(patientService.exportCsv());
+            .body(patientService.exportCsv(authentication.getName()));
     }
 }

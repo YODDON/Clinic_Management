@@ -39,9 +39,10 @@ public class DentistRepositoryImpl implements DentistRepository {
     @Override
     public void insertDentist(String id, CreateDentistRequest request) {
         jdbcTemplate.update("""
-            INSERT INTO dentists (id, specialization, license_number, years_experience, consultation_fee, bio, is_available)
-            VALUES (?, ?, ?, ?, ?, ?, true)
-            """, id, request.specialization(), request.licenseNumber(),
+            INSERT INTO dentists (id, employee_code, dob, workplace, degree, specialization, license_number, years_experience, consultation_fee, bio, is_available)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, true)
+            """, id, request.employeeCode(), request.dob(), request.workplace(), request.degree(),
+            request.specialization(), request.licenseNumber(),
             request.yearsExperience() == null ? 0 : request.yearsExperience(),
             request.consultationFee() == null ? 0 : request.consultationFee(),
             request.bio()
@@ -61,14 +62,19 @@ public class DentistRepositoryImpl implements DentistRepository {
             """, request.name(), request.email(), passwordHash, request.phone(), request.active(), id);
         jdbcTemplate.update("""
             UPDATE dentists
-            SET specialization = COALESCE(?, specialization),
+            SET employee_code = COALESCE(?, employee_code),
+                dob = COALESCE(?, dob),
+                workplace = COALESCE(?, workplace),
+                degree = COALESCE(?, degree),
+                specialization = COALESCE(?, specialization),
                 license_number = COALESCE(?, license_number),
                 years_experience = COALESCE(?, years_experience),
                 consultation_fee = COALESCE(?, consultation_fee),
                 bio = COALESCE(?, bio),
                 is_available = COALESCE(?, is_available)
             WHERE id = ?
-            """, request.specialization(), request.licenseNumber(), request.yearsExperience(),
+            """, request.employeeCode(), request.dob(), request.workplace(), request.degree(),
+            request.specialization(), request.licenseNumber(), request.yearsExperience(),
             request.consultationFee(), request.bio(), request.available(), id);
     }
 
@@ -95,8 +101,8 @@ public class DentistRepositoryImpl implements DentistRepository {
 
     private String baseSql() {
         return """
-            SELECT u.id, u.name, u.email, u.role, u.phone, d.specialization, d.license_number, d.years_experience,
-                   d.consultation_fee, d.bio, d.is_available, u.is_active
+            SELECT u.id, d.employee_code, u.name, u.email, u.role, u.phone, d.dob, d.workplace, d.degree,
+                   d.specialization, d.license_number, d.years_experience, d.consultation_fee, d.bio, d.is_available, u.is_active
             FROM users u
             JOIN dentists d ON d.id = u.id
             """;
@@ -105,10 +111,14 @@ public class DentistRepositoryImpl implements DentistRepository {
     private DentistDto mapRow(ResultSet rs, int rowNum) throws SQLException {
         return new DentistDto(
             rs.getString("id"),
+            rs.getString("employee_code"),
             rs.getString("name"),
             rs.getString("email"),
             rs.getString("role"),
             rs.getString("phone"),
+            rs.getString("dob"),
+            rs.getString("workplace"),
+            rs.getString("degree"),
             rs.getString("specialization"),
             rs.getString("license_number"),
             rs.getInt("years_experience"),

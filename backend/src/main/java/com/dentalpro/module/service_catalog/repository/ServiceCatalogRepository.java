@@ -4,6 +4,7 @@ import com.dentalpro.module.service_catalog.dto.CreateDentalChairRequest;
 import com.dentalpro.module.service_catalog.dto.CreateDentalServiceRequest;
 import com.dentalpro.module.service_catalog.dto.DentalChairDto;
 import com.dentalpro.module.service_catalog.dto.DentalServiceDto;
+import com.dentalpro.module.service_catalog.dto.ServicePriceHistoryDto;
 import com.dentalpro.module.service_catalog.dto.UpdateDentalChairRequest;
 import com.dentalpro.module.service_catalog.dto.UpdateDentalServiceRequest;
 
@@ -14,7 +15,11 @@ public interface ServiceCatalogRepository {
     List<DentalServiceDto> findServiceById(String id);
     void insertService(String id, CreateDentalServiceRequest request);
     void updateService(String id, UpdateDentalServiceRequest request);
+    void updateServicePrice(String id, double price);
+    void insertPriceHistory(String id, String serviceId, double oldPrice, double newPrice, String changedBy, String changeNote);
+    List<ServicePriceHistoryDto> findPriceHistory(String serviceId);
     void activateService(String id);
+    void deactivateService(String id);
     void deleteService(String id);
     int countServiceReferences(String id);
     List<DentalChairDto> findAllChairs();

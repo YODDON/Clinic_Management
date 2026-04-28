@@ -1,14 +1,12 @@
 package com.dentalpro.module.appointment.dto;
 
-import jakarta.validation.constraints.NotBlank;
-
 public record UpdateAppointmentRequest(
-    @NotBlank String patientId,
-    @NotBlank String dentistId,
-    @NotBlank String serviceId,
-    @NotBlank String chairId,
-    @NotBlank String appointmentDate,
-    @NotBlank String appointmentType,
+    String patientId,
+    String dentistId,
+    String serviceId,
+    String chairId,
+    String appointmentDate,
+    String appointmentType,
     String status,
     String notes
 ) {

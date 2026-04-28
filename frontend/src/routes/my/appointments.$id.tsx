@@ -5,7 +5,7 @@ import { Calendar, Clock, MapPin, Stethoscope } from "lucide-react";
 import { toast } from "sonner";
 
 import { customerPortalApi } from "@/lib/api";
-import { formatCurrency, formatDateTime } from "@/lib/format";
+import { formatDateTime } from "@/lib/format";
 import { CustomerShell } from "@/components/layout/CustomerShell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -73,10 +73,11 @@ function AppointmentDetailPage() {
           <Card className="h-fit border-primary/30 bg-accent/40">
             <CardContent className="space-y-4 p-5">
               <div>
-                <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Giá dịch vụ</div>
-                <div className="mt-1 text-2xl font-bold text-primary">
-                  {appointment.serviceName ? "Xem theo service catalog" : formatCurrency(0)}
-                </div>
+                <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Thanh toán</div>
+                <div className="mt-1 text-sm font-semibold text-primary">Chưa phát sinh hóa đơn từ lịch hẹn</div>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Chi phí sẽ chỉ xuất hiện trong mục hóa đơn sau khi bác sĩ hoàn tất hồ sơ điều trị.
+                </p>
               </div>
               <Button variant="outline" className="w-full" onClick={() => void navigate({ to: "/my/appointments" })}>
                 Quay lại danh sách

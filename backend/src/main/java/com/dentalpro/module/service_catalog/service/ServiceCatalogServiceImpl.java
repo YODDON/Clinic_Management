@@ -38,8 +38,35 @@ public class ServiceCatalogServiceImpl implements ServiceCatalogService {
     }
 
     @Override
+    public DentalServiceDto updatePrice(String id, UpdateServicePriceRequest request, String changedBy) {
+        DentalServiceDto current = getService(id);
+        serviceCatalogRepository.updateServicePrice(id, request.price());
+        serviceCatalogRepository.insertPriceHistory(
+            UUID.randomUUID().toString(),
+            id,
+            current.price(),
+            request.price(),
+            changedBy,
+            request.changeNote()
+        );
+        return getService(id);
+    }
+
+    @Override
+    public List<ServicePriceHistoryDto> getPriceHistory(String id) {
+        getService(id);
+        return serviceCatalogRepository.findPriceHistory(id);
+    }
+
+    @Override
     public DentalServiceDto activate(String id) {
         serviceCatalogRepository.activateService(id);
+        return getService(id);
+    }
+
+    @Override
+    public DentalServiceDto deactivate(String id) {
+        serviceCatalogRepository.deactivateService(id);
         return getService(id);
     }
 

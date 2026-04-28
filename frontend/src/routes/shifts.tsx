@@ -1,9 +1,10 @@
-﻿import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { CalendarClock, Eye, Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
+import { ClientPagination } from "@/components/common/ClientPagination";
 import { ConfirmActionDialog } from "@/components/common/ConfirmActionDialog";
 import { DetailDialog } from "@/components/common/DetailDialog";
 import { CrudFormDialog } from "@/components/common/CrudFormDialog";
@@ -82,6 +83,8 @@ function toShiftPayload(values: Record<string, string>): DentistShiftPayload {
 
 export function ShiftsPage() {
   const { can, session } = useRoleAccess();
+  const pageSize = 10;
+  const [page, setPage] = useState(1);
   const [editingShift, setEditingShift] = useState<DentistShift | null>(null);
   const [detailShift, setDetailShift] = useState<DentistShift | null>(null);
   const [formOpen, setFormOpen] = useState(false);
@@ -105,6 +108,15 @@ export function ShiftsPage() {
         (dentist, index, dentists) =>
           dentists.findIndex((item) => item.id === dentist.id) === index,
       );
+  const shifts = shiftsQuery.data || [];
+  const totalPages = Math.max(1, Math.ceil(shifts.length / pageSize));
+  const paginatedShifts = shifts.slice((page - 1) * pageSize, page * pageSize);
+
+  useEffect(() => {
+    if (page > totalPages) {
+      setPage(totalPages);
+    }
+  }, [page, totalPages]);
 
   const refreshShifts = async () => {
     await queryClient.invalidateQueries({ queryKey: ["shifts"] });
@@ -177,7 +189,7 @@ export function ShiftsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {(shiftsQuery.data || []).map((shift) => (
+              {paginatedShifts.map((shift) => (
                 <TableRow key={shift.id}>
                   <TableCell>{formatDate(shift.shiftDate)}</TableCell>
                   <TableCell>{shift.dentistName}</TableCell>
@@ -229,6 +241,12 @@ export function ShiftsPage() {
               ))}
             </TableBody>
           </Table>
+          <ClientPagination
+            page={page}
+            totalItems={shifts.length}
+            pageSize={pageSize}
+            onPageChange={setPage}
+          />
         </QueryState>
       </PageSection>
 

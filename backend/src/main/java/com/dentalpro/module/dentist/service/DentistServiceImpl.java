@@ -41,8 +41,26 @@ public class DentistServiceImpl implements DentistService {
     @Override
     public DentistDto create(CreateDentistRequest request) {
         String id = UUID.randomUUID().toString();
-        dentistRepository.insertUser(id, request, passwordEncoder.encode(request.password()));
-        dentistRepository.insertDentist(id, request);
+        String employeeCode = request.employeeCode() == null || request.employeeCode().isBlank()
+            ? "DEN-" + UUID.randomUUID().toString().replace("-", "").substring(0, 8).toUpperCase()
+            : request.employeeCode().trim();
+        CreateDentistRequest resolvedRequest = new CreateDentistRequest(
+            employeeCode,
+            request.name(),
+            request.email(),
+            request.password(),
+            request.phone(),
+            request.dob(),
+            request.workplace(),
+            request.degree(),
+            request.specialization(),
+            request.licenseNumber(),
+            request.yearsExperience(),
+            request.consultationFee(),
+            request.bio()
+        );
+        dentistRepository.insertUser(id, resolvedRequest, passwordEncoder.encode(request.password()));
+        dentistRepository.insertDentist(id, resolvedRequest);
         return getDentist(id);
     }
 

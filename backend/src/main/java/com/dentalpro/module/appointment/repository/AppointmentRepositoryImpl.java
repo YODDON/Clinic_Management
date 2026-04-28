@@ -24,8 +24,27 @@ public class AppointmentRepositoryImpl implements AppointmentRepository {
     }
 
     @Override
+    public List<AppointmentDto> findAllForDentist(String dentistId) {
+        return jdbcTemplate.query(
+            baseSql() + " WHERE a.dentist_id = ? ORDER BY a.appointment_date DESC",
+            this::mapRow,
+            dentistId
+        );
+    }
+
+    @Override
     public List<AppointmentDto> findById(String id) {
         return jdbcTemplate.query(baseSql() + " WHERE a.id = ?", this::mapRow, id);
+    }
+
+    @Override
+    public List<AppointmentDto> findByIdForDentist(String id, String dentistId) {
+        return jdbcTemplate.query(
+            baseSql() + " WHERE a.id = ? AND a.dentist_id = ?",
+            this::mapRow,
+            id,
+            dentistId
+        );
     }
 
     @Override

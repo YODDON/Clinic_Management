@@ -1,9 +1,10 @@
-﻿import { useDeferredValue, useState } from "react";
+import { useDeferredValue, useEffect, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { CalendarDays, Eye, Filter, Pencil, Plus, Trash2 } from "lucide-react";
+import { CalendarDays, CheckCircle2, ClipboardCheck, Eye, Filter, Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
+import { ClientPagination } from "@/components/common/ClientPagination";
 import { ConfirmActionDialog } from "@/components/common/ConfirmActionDialog";
 import { DetailDialog } from "@/components/common/DetailDialog";
 import { CrudFormDialog } from "@/components/common/CrudFormDialog";
@@ -138,10 +139,11 @@ function toAppointmentPayload(values: Record<string, string>): AppointmentPayloa
     notes: values.notes || null,
   };
 }
-
 export function AppointmentsPage() {
-  const { can } = useRoleAccess();
   const [search, setSearch] = useState("");
+  const pageSize = 10;
+  const [page, setPage] = useState(1);
+  const { can, role } = useRoleAccess();
   const [statusFilter, setStatusFilter] = useState("all");
   const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
   const [detailAppointment, setDetailAppointment] = useState<Appointment | null>(null);
@@ -200,6 +202,18 @@ export function AppointmentsPage() {
   const urgentCount = (appointmentsQuery.data || []).filter(
     (item) => item.status === "urgent",
   ).length;
+  const totalPages = Math.max(1, Math.ceil(appointments.length / pageSize));
+  const paginatedAppointments = appointments.slice((page - 1) * pageSize, page * pageSize);
+
+  useEffect(() => {
+    setPage(1);
+  }, [deferredSearch, statusFilter]);
+
+  useEffect(() => {
+    if (page > totalPages) {
+      setPage(totalPages);
+    }
+  }, [page, totalPages]);
 
   const refreshAppointments = async () => {
     await queryClient.invalidateQueries({ queryKey: ["appointments"] });
@@ -221,6 +235,16 @@ export function AppointmentsPage() {
     onError: (error: Error) => toast.error(error.message),
   });
 
+  const statusMutation = useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: string }) =>
+      appointmentsApi.updateStatus(id, status),
+    onSuccess: async () => {
+      toast.success("Đã cập nhật trạng thái lịch hẹn");
+      await refreshAppointments();
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+
   const deleteMutation = useMutation({
     mutationFn: async (appointmentId: string) => appointmentsApi.delete(appointmentId),
     onSuccess: async () => {
@@ -234,7 +258,7 @@ export function AppointmentsPage() {
   return (
     <AppShell
       title="Lịch hẹn"
-      allowedRoles={["admin", "dentist", "receptionist"]}
+      allowedRoles={["admin", "dentist"]}
       actions={
         can("appointments.create") ? (
           <Button
@@ -319,7 +343,7 @@ export function AppointmentsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {appointments.map((appointment) => (
+              {paginatedAppointments.map((appointment) => (
                 <TableRow key={appointment.id}>
                   <TableCell>{formatDateTime(appointment.appointmentDate)}</TableCell>
                   <TableCell>{appointment.patientName}</TableCell>
@@ -340,7 +364,35 @@ export function AppointmentsPage() {
                       >
                         <Eye className="h-4 w-4" />
                       </Button>
-                      {can("appointments.update") && (
+                      {can("appointments.update") && appointment.status === "pending" && (
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          aria-label="Xác nhận lịch hẹn"
+                          title="Xác nhận lịch hẹn"
+                          disabled={statusMutation.isPending}
+                          onClick={() =>
+                            statusMutation.mutate({ id: appointment.id, status: "confirmed" })
+                          }
+                        >
+                          <CheckCircle2 className="h-4 w-4" />
+                        </Button>
+                      )}
+                      {can("appointments.update") && appointment.status === "confirmed" && (
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          aria-label="Ghi nhận đã khám"
+                          title="Ghi nhận đã khám"
+                          disabled={statusMutation.isPending}
+                          onClick={() =>
+                            statusMutation.mutate({ id: appointment.id, status: "completed" })
+                          }
+                        >
+                          <ClipboardCheck className="h-4 w-4" />
+                        </Button>
+                      )}
+                      {can("appointments.update") && role !== "dentist" && (
                         <Button
                           variant="outline"
                           size="icon"
@@ -371,6 +423,12 @@ export function AppointmentsPage() {
               ))}
             </TableBody>
           </Table>
+          <ClientPagination
+            page={page}
+            totalItems={appointments.length}
+            pageSize={pageSize}
+            onPageChange={setPage}
+          />
         </QueryState>
       </PageSection>
 

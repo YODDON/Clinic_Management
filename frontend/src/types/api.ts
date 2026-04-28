@@ -1,4 +1,4 @@
-export type UserRole = "admin" | "dentist" | "receptionist" | "customer";
+export type UserRole = "admin" | "dentist" | "customer";
 
 export type ApiResponse<T> = {
   success: boolean;
@@ -20,6 +20,24 @@ export type AuthUser = {
   role: UserRole;
   phone: string | null;
   avatarUrl: string | null;
+};
+
+export type SystemUser = {
+  id: string;
+  name: string;
+  email: string;
+  role: UserRole;
+  phone: string | null;
+  active: boolean;
+};
+
+export type SystemUserPayload = {
+  name?: string;
+  email?: string;
+  password?: string;
+  phone?: string | null;
+  role?: Extract<UserRole, "admin">;
+  active?: boolean;
 };
 
 export type LoginResponse = {
@@ -76,10 +94,14 @@ export type PatientPayload = {
 
 export type Dentist = {
   id: string;
+  employeeCode: string;
   name: string;
   email: string;
   role: UserRole;
   phone: string | null;
+  dob: string | null;
+  workplace: string | null;
+  degree: string | null;
   specialization: string;
   licenseNumber: string;
   yearsExperience: number;
@@ -90,10 +112,14 @@ export type Dentist = {
 };
 
 export type DentistPayload = {
+  employeeCode?: string;
   name?: string;
   email?: string;
   password?: string;
   phone?: string | null;
+  dob?: string | null;
+  workplace?: string | null;
+  degree?: string | null;
   specialization?: string;
   licenseNumber?: string;
   yearsExperience?: number | null;
@@ -199,6 +225,21 @@ export type TreatmentRecordPayload = {
   notes?: string | null;
 };
 
+export type TreatmentMaterial = {
+  id: string;
+  treatmentRecordId: string;
+  inventoryId: string;
+  inventoryName: string;
+  quantity: number;
+  usageNote: string | null;
+};
+
+export type TreatmentMaterialPayload = {
+  inventoryId: string;
+  quantity: number;
+  usageNote?: string | null;
+};
+
 export type DentistShift = {
   id: string;
   dentistId: string;
@@ -269,6 +310,16 @@ export type DentalService = {
   active: boolean;
 };
 
+export type ServicePriceHistory = {
+  id: string;
+  serviceId: string;
+  oldPrice: number;
+  newPrice: number;
+  changedBy: string | null;
+  changeNote: string | null;
+  createdAt: string;
+};
+
 export type DentalServicePayload = {
   code?: string;
   name?: string;
@@ -277,6 +328,11 @@ export type DentalServicePayload = {
   durationMinutes?: number | null;
   description?: string | null;
   active?: boolean;
+};
+
+export type ServicePriceUpdatePayload = {
+  price: number;
+  changeNote?: string | null;
 };
 
 export type DentalChair = {
@@ -299,6 +355,7 @@ export type Invoice = {
   patientId: string;
   patientName: string;
   appointmentId: string | null;
+  treatmentRecordId: string | null;
   invoiceNumber: string;
   subtotal: number;
   insuranceDiscount: number;
@@ -306,6 +363,8 @@ export type Invoice = {
   status: string;
   issuedAt: string;
   dueDate: string | null;
+  issuedBy: string | null;
+  issuedByName: string | null;
 };
 
 export type InvoiceItemInput = {
@@ -342,6 +401,8 @@ export type Payment = {
   paymentMethod: string;
   paymentDate: string;
   notes: string | null;
+  recordedBy: string | null;
+  recordedByName: string | null;
 };
 
 export type PaymentPayload = {

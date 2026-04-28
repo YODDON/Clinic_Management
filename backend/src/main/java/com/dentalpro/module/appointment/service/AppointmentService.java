@@ -6,9 +6,9 @@ import com.dentalpro.module.appointment.dto.CreateAppointmentRequest;
 import com.dentalpro.module.appointment.dto.UpdateAppointmentRequest;
 
 public interface AppointmentService {
-    PageResponse<AppointmentDto> getAppointments();
-    AppointmentDto getAppointment(String id);
-    AppointmentDto create(CreateAppointmentRequest request);
-    AppointmentDto update(String id, UpdateAppointmentRequest request);
-    void delete(String id);
+    PageResponse<AppointmentDto> getAppointments(String email);
+    AppointmentDto getAppointment(String email, String id);
+    AppointmentDto create(String email, CreateAppointmentRequest request);
+    AppointmentDto update(String email, String id, UpdateAppointmentRequest request);
+    void delete(String email, String id);
 }

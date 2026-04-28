@@ -7,6 +7,7 @@ import com.dentalpro.module.appointment.dto.CreateAppointmentRequest;
 import com.dentalpro.module.appointment.dto.UpdateAppointmentRequest;
 import com.dentalpro.module.appointment.service.AppointmentService;
 import jakarta.validation.Valid;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -20,28 +21,28 @@ public class AppointmentController {
     }
 
     @GetMapping
-    public ApiResponse<PageResponse<AppointmentDto>> getAppointments() {
-        return ApiResponse.ok("Appointments fetched", appointmentService.getAppointments());
+    public ApiResponse<PageResponse<AppointmentDto>> getAppointments(Authentication authentication) {
+        return ApiResponse.ok("Appointments fetched", appointmentService.getAppointments(authentication.getName()));
     }
 
     @GetMapping("/{id}")
-    public ApiResponse<AppointmentDto> getAppointment(@PathVariable String id) {
-        return ApiResponse.ok("Appointment fetched", appointmentService.getAppointment(id));
+    public ApiResponse<AppointmentDto> getAppointment(Authentication authentication, @PathVariable String id) {
+        return ApiResponse.ok("Appointment fetched", appointmentService.getAppointment(authentication.getName(), id));
     }
 
     @PostMapping
-    public ApiResponse<AppointmentDto> create(@Valid @RequestBody CreateAppointmentRequest request) {
-        return ApiResponse.ok("Appointment created", appointmentService.create(request));
+    public ApiResponse<AppointmentDto> create(Authentication authentication, @Valid @RequestBody CreateAppointmentRequest request) {
+        return ApiResponse.ok("Appointment created", appointmentService.create(authentication.getName(), request));
     }
 
     @PatchMapping("/{id}")
-    public ApiResponse<AppointmentDto> update(@PathVariable String id, @Valid @RequestBody UpdateAppointmentRequest request) {
-        return ApiResponse.ok("Appointment updated", appointmentService.update(id, request));
+    public ApiResponse<AppointmentDto> update(Authentication authentication, @PathVariable String id, @Valid @RequestBody UpdateAppointmentRequest request) {
+        return ApiResponse.ok("Appointment updated", appointmentService.update(authentication.getName(), id, request));
     }
 
     @DeleteMapping("/{id}")
-    public ApiResponse<Void> delete(@PathVariable String id) {
-        appointmentService.delete(id);
+    public ApiResponse<Void> delete(Authentication authentication, @PathVariable String id) {
+        appointmentService.delete(authentication.getName(), id);
         return ApiResponse.ok("Appointment deleted", null);
     }
 }

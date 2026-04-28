@@ -1,4 +1,4 @@
-import { clearSession, getSession } from "@/lib/session";
+﻿import { clearSession, getSession } from "@/lib/session";
 import type {
   ApiResponse,
   Appointment,
@@ -30,8 +30,14 @@ import type {
   PublicAvailableDates,
   PublicAvailableSlots,
   RegisterPayload,
+  ServicePriceHistory,
+  ServicePriceUpdatePayload,
   StockBatch,
   StockBatchPayload,
+  SystemUser,
+  SystemUserPayload,
+  TreatmentMaterial,
+  TreatmentMaterialPayload,
   TreatmentRecord,
   TreatmentRecordPayload,
 } from "@/types/api";
@@ -132,6 +138,17 @@ export const dashboardApi = {
   getStats: () => request<DashboardStats>("/dashboard/stats"),
 };
 
+export const usersApi = {
+  list: () => request<PageResponse<SystemUser>>("/users"),
+  create: (
+    body: Required<Pick<SystemUserPayload, "name" | "email" | "password" | "role">> & SystemUserPayload,
+  ) => request<SystemUser>("/users", { method: "POST", body }),
+  update: (id: string, body: SystemUserPayload) =>
+    request<SystemUser>(`/users/${id}`, { method: "PATCH", body }),
+  activate: (id: string) => request<SystemUser>(`/users/${id}/activate`, { method: "POST" }),
+  deactivate: (id: string) => request<SystemUser>(`/users/${id}/deactivate`, { method: "POST" }),
+};
+
 export const patientsApi = {
   list: (search?: string) => request<PageResponse<Patient>>("/patients", { query: { search } }),
   create: (body: PatientPayload) => request<Patient>("/patients", { method: "POST", body }),
@@ -166,18 +183,24 @@ export const appointmentsApi = {
   ) => request<Appointment>("/appointments", { method: "POST", body }),
   update: (id: string, body: AppointmentPayload) =>
     request<Appointment>(`/appointments/${id}`, { method: "PATCH", body }),
+  updateStatus: (id: string, status: string) =>
+    request<Appointment>(`/appointments/${id}`, { method: "PATCH", body: { status } }),
   delete: (id: string) => request<void>(`/appointments/${id}`, { method: "DELETE" }),
 };
 
 export const treatmentRecordsApi = {
   list: () => request<PageResponse<TreatmentRecord>>("/treatment-records"),
   create: (
-    body: Required<Pick<TreatmentRecordPayload, "patientId" | "dentistId">> &
-      TreatmentRecordPayload,
+    body: Required<Pick<TreatmentRecordPayload, "patientId" | "dentistId">> & TreatmentRecordPayload,
   ) => request<TreatmentRecord>("/treatment-records", { method: "POST", body }),
   update: (id: string, body: TreatmentRecordPayload) =>
     request<TreatmentRecord>(`/treatment-records/${id}`, { method: "PATCH", body }),
   delete: (id: string) => request<void>(`/treatment-records/${id}`, { method: "DELETE" }),
+  materials: (id: string) => request<TreatmentMaterial[]>(`/treatment-records/${id}/materials`),
+  addMaterial: (id: string, body: TreatmentMaterialPayload) =>
+    request<TreatmentMaterial>(`/treatment-records/${id}/materials`, { method: "POST", body }),
+  deleteMaterial: (recordId: string, materialId: string) =>
+    request<void>(`/treatment-records/${recordId}/materials/${materialId}`, { method: "DELETE" }),
 };
 
 export const shiftsApi = {
@@ -220,6 +243,10 @@ export const servicesApi = {
     request<DentalService>(`/services/${id}`, { method: "PATCH", body }),
   delete: (id: string) => request<void>(`/services/${id}`, { method: "DELETE" }),
   activate: (id: string) => request<DentalService>(`/services/${id}/activate`, { method: "POST" }),
+  deactivate: (id: string) => request<DentalService>(`/services/${id}/deactivate`, { method: "POST" }),
+  updatePrice: (id: string, body: ServicePriceUpdatePayload) =>
+    request<DentalService>(`/services/${id}/price`, { method: "PATCH", body }),
+  priceHistory: (id: string) => request<ServicePriceHistory[]>(`/services/${id}/price-history`),
   createChair: (body: Required<Pick<DentalChairPayload, "chairNumber">> & DentalChairPayload) =>
     request<DentalChair>("/services/chairs", { method: "POST", body }),
   updateChair: (id: string, body: DentalChairPayload) =>
@@ -229,9 +256,12 @@ export const servicesApi = {
 
 export const invoicesApi = {
   list: () => request<PageResponse<Invoice>>("/invoices"),
+  get: (id: string) => request<Invoice>(`/invoices/${id}`),
   items: (id: string) => request<InvoiceItem[]>(`/invoices/${id}/items`),
   payments: (id: string) => request<Payment[]>(`/invoices/${id}/payments`),
   create: (body: InvoicePayload) => request<Invoice>("/invoices", { method: "POST", body }),
+  createFromTreatmentRecord: (treatmentRecordId: string) =>
+    request<Invoice>(`/invoices/treatment-records/${treatmentRecordId}`, { method: "POST" }),
   updateStatus: (id: string, status: string) =>
     request<Invoice>(`/invoices/${id}/status`, { method: "PATCH", body: { status } }),
   delete: (id: string) => request<void>(`/invoices/${id}`, { method: "DELETE" }),
@@ -245,6 +275,10 @@ export const customerPortalApi = {
   createAppointment: (body: CustomerAppointmentPayload) =>
     request<Appointment>("/my/appointments", { method: "POST", body }),
   cancelAppointment: (id: string) => request<void>(`/my/appointments/${id}`, { method: "DELETE" }),
+  listInvoices: () => request<PageResponse<Invoice>>("/my/invoices"),
+  getInvoice: (id: string) => request<Invoice>(`/my/invoices/${id}`),
+  getInvoiceItems: (id: string) => request<InvoiceItem[]>(`/my/invoices/${id}/items`),
+  getInvoicePayments: (id: string) => request<Payment[]>(`/my/invoices/${id}/payments`),
   getProfile: () => request<CustomerProfile>("/my/profile"),
   updateProfile: (body: CustomerProfilePayload) =>
     request<CustomerProfile>("/my/profile", { method: "PATCH", body }),

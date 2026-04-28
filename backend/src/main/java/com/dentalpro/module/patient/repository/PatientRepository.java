@@ -8,8 +8,11 @@ import java.util.List;
 
 public interface PatientRepository {
     List<PatientDto> findAll(String search);
+    List<PatientDto> findAllForDentist(String dentistId, String search);
     List<PatientDto> findById(String id);
-    void insert(String id, CreatePatientRequest request);
+    List<PatientDto> findByIdForDentist(String id, String dentistId);
+    String findUserIdById(String id);
+    void insert(String id, String userId, CreatePatientRequest request);
     void update(String id, UpdatePatientRequest request);
     void updateStatus(String id, boolean active);
     void delete(String id);

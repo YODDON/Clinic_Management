@@ -22,8 +22,10 @@ import { Route as AppointmentsRouteImport } from './routes/appointments'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppIndexRouteImport } from './routes/app/index'
 import { Route as MyProfileRouteImport } from './routes/my/profile'
+import { Route as MyInvoicesRouteImport } from './routes/my/invoices'
 import { Route as MyAppointmentsRouteImport } from './routes/my/appointments'
 import { Route as AppTreatmentRecordsRouteImport } from './routes/app/treatment-records'
+import { Route as AppSystemRouteImport } from './routes/app/system'
 import { Route as AppShiftsRouteImport } from './routes/app/shifts'
 import { Route as AppServicesRouteImport } from './routes/app/services'
 import { Route as AppPatientsRouteImport } from './routes/app/patients'
@@ -31,7 +33,9 @@ import { Route as AppInvoicesRouteImport } from './routes/app/invoices'
 import { Route as AppInventoryRouteImport } from './routes/app/inventory'
 import { Route as AppDentistsRouteImport } from './routes/app/dentists'
 import { Route as AppAppointmentsRouteImport } from './routes/app/appointments'
+import { Route as MyInvoicesIndexRouteImport } from './routes/my/invoices.index'
 import { Route as MyAppointmentsIndexRouteImport } from './routes/my/appointments.index'
+import { Route as MyInvoicesIdRouteImport } from './routes/my/invoices.$id'
 import { Route as MyAppointmentsNewRouteImport } from './routes/my/appointments.new'
 import { Route as MyAppointmentsIdRouteImport } from './routes/my/appointments.$id'
 
@@ -100,6 +104,11 @@ const MyProfileRoute = MyProfileRouteImport.update({
   path: '/my/profile',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MyInvoicesRoute = MyInvoicesRouteImport.update({
+  id: '/my/invoices',
+  path: '/my/invoices',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MyAppointmentsRoute = MyAppointmentsRouteImport.update({
   id: '/my/appointments',
   path: '/my/appointments',
@@ -108,6 +117,11 @@ const MyAppointmentsRoute = MyAppointmentsRouteImport.update({
 const AppTreatmentRecordsRoute = AppTreatmentRecordsRouteImport.update({
   id: '/app/treatment-records',
   path: '/app/treatment-records',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppSystemRoute = AppSystemRouteImport.update({
+  id: '/app/system',
+  path: '/app/system',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppShiftsRoute = AppShiftsRouteImport.update({
@@ -145,10 +159,20 @@ const AppAppointmentsRoute = AppAppointmentsRouteImport.update({
   path: '/app/appointments',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MyInvoicesIndexRoute = MyInvoicesIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => MyInvoicesRoute,
+} as any)
 const MyAppointmentsIndexRoute = MyAppointmentsIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => MyAppointmentsRoute,
+} as any)
+const MyInvoicesIdRoute = MyInvoicesIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => MyInvoicesRoute,
 } as any)
 const MyAppointmentsNewRoute = MyAppointmentsNewRouteImport.update({
   id: '/new',
@@ -180,13 +204,17 @@ export interface FileRoutesByFullPath {
   '/app/patients': typeof AppPatientsRoute
   '/app/services': typeof AppServicesRoute
   '/app/shifts': typeof AppShiftsRoute
+  '/app/system': typeof AppSystemRoute
   '/app/treatment-records': typeof AppTreatmentRecordsRoute
   '/my/appointments': typeof MyAppointmentsRouteWithChildren
+  '/my/invoices': typeof MyInvoicesRouteWithChildren
   '/my/profile': typeof MyProfileRoute
   '/app/': typeof AppIndexRoute
   '/my/appointments/$id': typeof MyAppointmentsIdRoute
   '/my/appointments/new': typeof MyAppointmentsNewRoute
+  '/my/invoices/$id': typeof MyInvoicesIdRoute
   '/my/appointments/': typeof MyAppointmentsIndexRoute
+  '/my/invoices/': typeof MyInvoicesIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -207,12 +235,15 @@ export interface FileRoutesByTo {
   '/app/patients': typeof AppPatientsRoute
   '/app/services': typeof AppServicesRoute
   '/app/shifts': typeof AppShiftsRoute
+  '/app/system': typeof AppSystemRoute
   '/app/treatment-records': typeof AppTreatmentRecordsRoute
   '/my/profile': typeof MyProfileRoute
   '/app': typeof AppIndexRoute
   '/my/appointments/$id': typeof MyAppointmentsIdRoute
   '/my/appointments/new': typeof MyAppointmentsNewRoute
+  '/my/invoices/$id': typeof MyInvoicesIdRoute
   '/my/appointments': typeof MyAppointmentsIndexRoute
+  '/my/invoices': typeof MyInvoicesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -234,13 +265,17 @@ export interface FileRoutesById {
   '/app/patients': typeof AppPatientsRoute
   '/app/services': typeof AppServicesRoute
   '/app/shifts': typeof AppShiftsRoute
+  '/app/system': typeof AppSystemRoute
   '/app/treatment-records': typeof AppTreatmentRecordsRoute
   '/my/appointments': typeof MyAppointmentsRouteWithChildren
+  '/my/invoices': typeof MyInvoicesRouteWithChildren
   '/my/profile': typeof MyProfileRoute
   '/app/': typeof AppIndexRoute
   '/my/appointments/$id': typeof MyAppointmentsIdRoute
   '/my/appointments/new': typeof MyAppointmentsNewRoute
+  '/my/invoices/$id': typeof MyInvoicesIdRoute
   '/my/appointments/': typeof MyAppointmentsIndexRoute
+  '/my/invoices/': typeof MyInvoicesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -263,13 +298,17 @@ export interface FileRouteTypes {
     | '/app/patients'
     | '/app/services'
     | '/app/shifts'
+    | '/app/system'
     | '/app/treatment-records'
     | '/my/appointments'
+    | '/my/invoices'
     | '/my/profile'
     | '/app/'
     | '/my/appointments/$id'
     | '/my/appointments/new'
+    | '/my/invoices/$id'
     | '/my/appointments/'
+    | '/my/invoices/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -290,12 +329,15 @@ export interface FileRouteTypes {
     | '/app/patients'
     | '/app/services'
     | '/app/shifts'
+    | '/app/system'
     | '/app/treatment-records'
     | '/my/profile'
     | '/app'
     | '/my/appointments/$id'
     | '/my/appointments/new'
+    | '/my/invoices/$id'
     | '/my/appointments'
+    | '/my/invoices'
   id:
     | '__root__'
     | '/'
@@ -316,13 +358,17 @@ export interface FileRouteTypes {
     | '/app/patients'
     | '/app/services'
     | '/app/shifts'
+    | '/app/system'
     | '/app/treatment-records'
     | '/my/appointments'
+    | '/my/invoices'
     | '/my/profile'
     | '/app/'
     | '/my/appointments/$id'
     | '/my/appointments/new'
+    | '/my/invoices/$id'
     | '/my/appointments/'
+    | '/my/invoices/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -344,8 +390,10 @@ export interface RootRouteChildren {
   AppPatientsRoute: typeof AppPatientsRoute
   AppServicesRoute: typeof AppServicesRoute
   AppShiftsRoute: typeof AppShiftsRoute
+  AppSystemRoute: typeof AppSystemRoute
   AppTreatmentRecordsRoute: typeof AppTreatmentRecordsRoute
   MyAppointmentsRoute: typeof MyAppointmentsRouteWithChildren
+  MyInvoicesRoute: typeof MyInvoicesRouteWithChildren
   MyProfileRoute: typeof MyProfileRoute
   AppIndexRoute: typeof AppIndexRoute
 }
@@ -443,6 +491,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MyProfileRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/my/invoices': {
+      id: '/my/invoices'
+      path: '/my/invoices'
+      fullPath: '/my/invoices'
+      preLoaderRoute: typeof MyInvoicesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/my/appointments': {
       id: '/my/appointments'
       path: '/my/appointments'
@@ -455,6 +510,13 @@ declare module '@tanstack/react-router' {
       path: '/app/treatment-records'
       fullPath: '/app/treatment-records'
       preLoaderRoute: typeof AppTreatmentRecordsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app/system': {
+      id: '/app/system'
+      path: '/app/system'
+      fullPath: '/app/system'
+      preLoaderRoute: typeof AppSystemRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/app/shifts': {
@@ -506,12 +568,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAppointmentsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/my/invoices/': {
+      id: '/my/invoices/'
+      path: '/'
+      fullPath: '/my/invoices/'
+      preLoaderRoute: typeof MyInvoicesIndexRouteImport
+      parentRoute: typeof MyInvoicesRoute
+    }
     '/my/appointments/': {
       id: '/my/appointments/'
       path: '/'
       fullPath: '/my/appointments/'
       preLoaderRoute: typeof MyAppointmentsIndexRouteImport
       parentRoute: typeof MyAppointmentsRoute
+    }
+    '/my/invoices/$id': {
+      id: '/my/invoices/$id'
+      path: '/$id'
+      fullPath: '/my/invoices/$id'
+      preLoaderRoute: typeof MyInvoicesIdRouteImport
+      parentRoute: typeof MyInvoicesRoute
     }
     '/my/appointments/new': {
       id: '/my/appointments/new'
@@ -546,6 +622,20 @@ const MyAppointmentsRouteWithChildren = MyAppointmentsRoute._addFileChildren(
   MyAppointmentsRouteChildren,
 )
 
+interface MyInvoicesRouteChildren {
+  MyInvoicesIdRoute: typeof MyInvoicesIdRoute
+  MyInvoicesIndexRoute: typeof MyInvoicesIndexRoute
+}
+
+const MyInvoicesRouteChildren: MyInvoicesRouteChildren = {
+  MyInvoicesIdRoute: MyInvoicesIdRoute,
+  MyInvoicesIndexRoute: MyInvoicesIndexRoute,
+}
+
+const MyInvoicesRouteWithChildren = MyInvoicesRoute._addFileChildren(
+  MyInvoicesRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppointmentsRoute: AppointmentsRoute,
@@ -565,8 +655,10 @@ const rootRouteChildren: RootRouteChildren = {
   AppPatientsRoute: AppPatientsRoute,
   AppServicesRoute: AppServicesRoute,
   AppShiftsRoute: AppShiftsRoute,
+  AppSystemRoute: AppSystemRoute,
   AppTreatmentRecordsRoute: AppTreatmentRecordsRoute,
   MyAppointmentsRoute: MyAppointmentsRouteWithChildren,
+  MyInvoicesRoute: MyInvoicesRouteWithChildren,
   MyProfileRoute: MyProfileRoute,
   AppIndexRoute: AppIndexRoute,
 }

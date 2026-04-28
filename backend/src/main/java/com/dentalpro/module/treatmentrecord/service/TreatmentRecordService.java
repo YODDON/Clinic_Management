@@ -10,12 +10,13 @@ import com.dentalpro.module.treatmentrecord.dto.UpdateTreatmentRecordRequest;
 import java.util.List;
 
 public interface TreatmentRecordService {
-    PageResponse<TreatmentRecordDto> getRecords();
-    TreatmentRecordDto getRecord(String id);
-    TreatmentRecordDto create(CreateTreatmentRecordRequest request);
-    TreatmentRecordDto update(String id, UpdateTreatmentRecordRequest request);
-    void delete(String id);
-    List<TreatmentMaterialDto> getMaterials(String recordId);
-    TreatmentMaterialDto addMaterial(String recordId, AddTreatmentMaterialRequest request);
+    PageResponse<TreatmentRecordDto> getRecords(String email);
+    TreatmentRecordDto getRecord(String email, String id);
+    TreatmentRecordDto create(String email, CreateTreatmentRecordRequest request);
+    TreatmentRecordDto update(String email, String id, UpdateTreatmentRecordRequest request);
+    void delete(String email, String id);
+    List<TreatmentMaterialDto> getMaterials(String email, String recordId);
+    TreatmentMaterialDto addMaterial(String email, String recordId, AddTreatmentMaterialRequest request);
+    void deleteMaterial(String email, String recordId, String materialId);
 }
 

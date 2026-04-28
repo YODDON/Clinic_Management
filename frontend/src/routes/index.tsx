@@ -22,7 +22,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useSession } from "@/hooks/use-session";
 import { publicApi } from "@/lib/api";
-import { formatCurrency } from "@/lib/format";
 import { getBookingRouteForRole, normalizeRole } from "@/lib/rbac";
 
 export const Route = createFileRoute("/")({
@@ -201,8 +200,7 @@ function LandingPage() {
                   </div>
                   <h3 className="mb-1 text-lg font-bold group-hover:text-primary">{service.name}</h3>
                   <p className="mb-4 line-clamp-2 text-sm text-muted-foreground">{service.description}</p>
-                  <div className="flex items-center justify-between border-t border-border pt-3">
-                    <span className="text-base font-bold text-primary">{formatCurrency(service.price)}</span>
+                  <div className="flex items-center justify-end border-t border-border pt-3">
                     <Button size="sm" variant="ghost" onClick={() => handleBooking(service.id)}>
                       Đặt lịch <ArrowRight className="h-3.5 w-3.5" />
                     </Button>
@@ -243,7 +241,7 @@ function LandingPage() {
                   <p className="mt-2 line-clamp-2 text-xs text-muted-foreground">{dentist.bio}</p>
                   <div className="mt-3 flex items-center justify-between border-t border-border pt-3 text-xs">
                     <span className="text-muted-foreground">{dentist.yearsExperience} năm KN</span>
-                    <span className="font-semibold text-primary">{formatCurrency(dentist.consultationFee)}</span>
+                    <span className="font-semibold text-primary">Đặt lịch tư vấn</span>
                   </div>
                 </CardContent>
               </Card>

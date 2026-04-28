@@ -1,9 +1,10 @@
-﻿import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { Armchair, Briefcase, Eye, Pencil, Plus, Power, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
+import { ClientPagination } from "@/components/common/ClientPagination";
 import { ConfirmActionDialog } from "@/components/common/ConfirmActionDialog";
 import { DetailDialog } from "@/components/common/DetailDialog";
 import { CrudFormDialog } from "@/components/common/CrudFormDialog";
@@ -93,6 +94,9 @@ function toChairPayload(values: Record<string, string>): DentalChairPayload {
 export function ServicesPage() {
   const { can } = useRoleAccess();
   const [activeTab, setActiveTab] = useState("services");
+  const pageSize = 10;
+  const [servicesPage, setServicesPage] = useState(1);
+  const [chairsPage, setChairsPage] = useState(1);
   const [editingService, setEditingService] = useState<DentalService | null>(null);
   const [detailService, setDetailService] = useState<DentalService | null>(null);
   const [serviceFormOpen, setServiceFormOpen] = useState(false);
@@ -111,6 +115,29 @@ export function ServicesPage() {
     queryKey: ["chairs"],
     queryFn: servicesApi.chairs,
   });
+  const services = servicesQuery.data || [];
+  const chairs = chairsQuery.data || [];
+  const servicesTotalPages = Math.max(1, Math.ceil(services.length / pageSize));
+  const chairsTotalPages = Math.max(1, Math.ceil(chairs.length / pageSize));
+  const paginatedServices = services.slice((servicesPage - 1) * pageSize, servicesPage * pageSize);
+  const paginatedChairs = chairs.slice((chairsPage - 1) * pageSize, chairsPage * pageSize);
+
+  useEffect(() => {
+    setServicesPage(1);
+    setChairsPage(1);
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (servicesPage > servicesTotalPages) {
+      setServicesPage(servicesTotalPages);
+    }
+  }, [servicesPage, servicesTotalPages]);
+
+  useEffect(() => {
+    if (chairsPage > chairsTotalPages) {
+      setChairsPage(chairsTotalPages);
+    }
+  }, [chairsPage, chairsTotalPages]);
 
   const refresh = async () => {
     await Promise.all([
@@ -185,7 +212,7 @@ export function ServicesPage() {
   return (
     <AppShell
       title="Dịch vụ & Ghế nha"
-      allowedRoles={["admin", "dentist", "receptionist"]}
+      allowedRoles={["admin", "dentist"]}
     >
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <div className="mb-4 flex items-center justify-between gap-3">
@@ -236,7 +263,7 @@ export function ServicesPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {(servicesQuery.data || []).map((service) => (
+                  {paginatedServices.map((service) => (
                     <TableRow key={service.id}>
                       <TableCell>{service.code}</TableCell>
                       <TableCell>{service.name}</TableCell>
@@ -299,6 +326,12 @@ export function ServicesPage() {
                   ))}
                 </TableBody>
               </Table>
+              <ClientPagination
+                page={servicesPage}
+                totalItems={services.length}
+                pageSize={pageSize}
+                onPageChange={setServicesPage}
+              />
             </QueryState>
           </PageSection>
         </TabsContent>
@@ -325,7 +358,7 @@ export function ServicesPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {(chairsQuery.data || []).map((chair) => (
+                  {paginatedChairs.map((chair) => (
                     <TableRow key={chair.id}>
                       <TableCell>{chair.chairNumber}</TableCell>
                       <TableCell>{chair.chairName || "Chưa đặt tên"}</TableCell>
@@ -375,6 +408,12 @@ export function ServicesPage() {
                   ))}
                 </TableBody>
               </Table>
+              <ClientPagination
+                page={chairsPage}
+                totalItems={chairs.length}
+                pageSize={pageSize}
+                onPageChange={setChairsPage}
+              />
             </QueryState>
           </PageSection>
         </TabsContent>

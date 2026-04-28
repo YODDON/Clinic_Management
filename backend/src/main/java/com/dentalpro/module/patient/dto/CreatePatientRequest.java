@@ -13,7 +13,8 @@ public record CreatePatientRequest(
     String idNumber,
     String bloodType,
     String allergyNotes,
-    String dentalNotes
+    String dentalNotes,
+    String password
 ) {
 }
 

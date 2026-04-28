@@ -5,6 +5,7 @@ import {
   CalendarClock,
   CalendarDays,
   ClipboardList,
+  Cog,
   LayoutDashboard,
   Package,
   Receipt,
@@ -34,6 +35,8 @@ type NavItem = {
 };
 
 const overview: NavItem[] = [{ title: "Tong quan", url: "/app/", icon: LayoutDashboard }];
+
+const system: NavItem[] = [{ title: "Quan ly he thong", url: "/app/system", icon: Cog }];
 
 const operations: NavItem[] = [
   { title: "Lich hen", url: "/app/appointments", icon: CalendarDays },
@@ -114,6 +117,7 @@ export function AppSidebar() {
       </SidebarHeader>
       <SidebarContent>
         <NavGroup label="Tong quan" items={overview} />
+        <NavGroup label="He thong" items={system} />
         <NavGroup label="Van hanh" items={operations} />
         <NavGroup label="Phong kham" items={clinic} />
         <NavGroup label="Tai chinh & Kho" items={finance} />

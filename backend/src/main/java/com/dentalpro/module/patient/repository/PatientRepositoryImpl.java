@@ -30,6 +30,22 @@ public class PatientRepositoryImpl implements PatientRepository {
     }
 
     @Override
+    public List<PatientDto> findAllForDentist(String dentistId, String search) {
+        String sql = """
+            SELECT DISTINCT p.id, p.name, p.email, p.phone, p.dob, p.gender, p.address, p.id_number, p.blood_type,
+                   p.allergy_notes, p.dental_notes, p.is_active, p.created_at
+            FROM patients p
+            WHERE (? IS NULL OR ? = '' OR LOWER(p.name) LIKE CONCAT('%%', LOWER(?), '%%') OR p.phone LIKE CONCAT('%%', ?, '%%'))
+              AND (
+                  EXISTS (SELECT 1 FROM appointments a WHERE a.patient_id = p.id AND a.dentist_id = ?)
+                  OR EXISTS (SELECT 1 FROM treatment_records tr WHERE tr.patient_id = p.id AND tr.dentist_id = ?)
+              )
+            ORDER BY p.created_at DESC
+            """;
+        return jdbcTemplate.query(sql, this::mapRow, search, search, search, search, dentistId, dentistId);
+    }
+
+    @Override
     public List<PatientDto> findById(String id) {
         return jdbcTemplate.query("""
             SELECT id, name, email, phone, dob, gender, address, id_number, blood_type, allergy_notes, dental_notes, is_active
@@ -38,12 +54,31 @@ public class PatientRepositoryImpl implements PatientRepository {
     }
 
     @Override
-    public void insert(String id, CreatePatientRequest request) {
+    public List<PatientDto> findByIdForDentist(String id, String dentistId) {
+        return jdbcTemplate.query("""
+            SELECT p.id, p.name, p.email, p.phone, p.dob, p.gender, p.address, p.id_number, p.blood_type,
+                   p.allergy_notes, p.dental_notes, p.is_active
+            FROM patients p
+            WHERE p.id = ?
+              AND (
+                  EXISTS (SELECT 1 FROM appointments a WHERE a.patient_id = p.id AND a.dentist_id = ?)
+                  OR EXISTS (SELECT 1 FROM treatment_records tr WHERE tr.patient_id = p.id AND tr.dentist_id = ?)
+              )
+            """, this::mapRow, id, dentistId, dentistId);
+    }
+
+    @Override
+    public String findUserIdById(String id) {
+        return jdbcTemplate.queryForObject("SELECT user_id FROM patients WHERE id = ?", String.class, id);
+    }
+
+    @Override
+    public void insert(String id, String userId, CreatePatientRequest request) {
         jdbcTemplate.update("""
-            INSERT INTO patients (id, name, email, phone, dob, gender, address, id_number, blood_type, allergy_notes, dental_notes, is_active)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, true)
+            INSERT INTO patients (id, user_id, name, email, phone, dob, gender, address, id_number, blood_type, allergy_notes, dental_notes, is_active)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, true)
             """,
-            id, request.name(), request.email(), request.phone(), request.dob(), request.gender(),
+            id, userId, request.name(), request.email(), request.phone(), request.dob(), request.gender(),
             request.address(), request.idNumber(), request.bloodType(), request.allergyNotes(), request.dentalNotes()
         );
     }

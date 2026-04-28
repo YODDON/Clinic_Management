@@ -24,7 +24,6 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { customerPortalApi, publicApi } from "@/lib/api";
-import { formatCurrency } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { DentalService, Dentist } from "@/types/api";
 
@@ -120,7 +119,7 @@ function NewAppointmentPage() {
   const createMutation = useMutation({
     mutationFn: customerPortalApi.createAppointment,
     onSuccess: async () => {
-      toast.success("Đặt lịch thành công, lễ tân sẽ xác nhận sớm.");
+      toast.success("Đặt lịch thành công, admin sẽ xác nhận sớm.");
       await navigate({ to: "/my/appointments" });
     },
     onError: (error: Error) => toast.error(error.message),
@@ -286,9 +285,8 @@ function ServiceStep({
             </div>
             <h3 className="font-bold">{service.name}</h3>
             <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{service.description}</p>
-            <div className="mt-3 flex items-center justify-between border-t border-border pt-3 text-sm">
+            <div className="mt-3 border-t border-border pt-3 text-sm">
               <span className="text-xs text-muted-foreground">{service.durationMinutes} phút</span>
-              <span className="font-bold text-primary">{formatCurrency(service.price)}</span>
             </div>
           </button>
         );
@@ -498,10 +496,10 @@ function ConfirmStep({
 
       <Card className="h-fit border-primary/30 bg-accent/40">
         <CardContent className="p-5">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Giá dự kiến</p>
-          <p className="mt-1 text-3xl font-bold text-primary">{formatCurrency(service.price)}</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Quy trình thanh toán</p>
+          <p className="mt-1 text-sm font-semibold text-primary">Chưa phát sinh chi phí khi đặt lịch</p>
           <p className="mt-3 text-xs text-muted-foreground">
-            Lịch hẹn sẽ ở trạng thái <strong>Chờ xác nhận</strong>. Lễ tân sẽ liên hệ và gán ghế nha trước giờ hẹn.
+            Lịch hẹn sẽ ở trạng thái <strong>Chờ xác nhận</strong>. Hóa đơn chỉ được tạo sau khi bác sĩ khám, ghi chẩn đoán và vật tư điều trị.
           </p>
         </CardContent>
       </Card>

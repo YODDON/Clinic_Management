@@ -1,4 +1,4 @@
-﻿import { useDeferredValue, useState } from "react";
+import { useDeferredValue, useEffect, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import {
@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
+import { ClientPagination } from "@/components/common/ClientPagination";
 import { ConfirmActionDialog } from "@/components/common/ConfirmActionDialog";
 import { DetailDialog } from "@/components/common/DetailDialog";
 import { CrudFormDialog } from "@/components/common/CrudFormDialog";
@@ -162,6 +163,8 @@ function InventoryStatusBadge({ item }: { item: InventoryItem }) {
 export function InventoryPage() {
   const { can } = useRoleAccess();
   const [search, setSearch] = useState("");
+  const pageSize = 10;
+  const [page, setPage] = useState(1);
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
   const [detailItem, setDetailItem] = useState<InventoryItem | null>(null);
   const [itemFormOpen, setItemFormOpen] = useState(false);
@@ -180,10 +183,22 @@ export function InventoryPage() {
     const keyword = deferredSearch.toLowerCase();
     return item.code.toLowerCase().includes(keyword) || item.name.toLowerCase().includes(keyword);
   });
+  const totalPages = Math.max(1, Math.ceil(items.length / pageSize));
+  const paginatedItems = items.slice((page - 1) * pageSize, page * pageSize);
 
   const lowStock = items.filter((item) => item.stock <= item.minStock);
   const outOfStock = items.filter((item) => item.stock === 0);
   const healthyStock = items.filter((item) => item.stock > item.minStock);
+
+  useEffect(() => {
+    setPage(1);
+  }, [deferredSearch]);
+
+  useEffect(() => {
+    if (page > totalPages) {
+      setPage(totalPages);
+    }
+  }, [page, totalPages]);
 
   const refreshInventory = async () => {
     await Promise.all([
@@ -253,7 +268,7 @@ export function InventoryPage() {
   return (
     <AppShell
       title="Kho vật tư"
-      allowedRoles={["admin", "dentist", "receptionist"]}
+      allowedRoles={["admin", "dentist"]}
       actions={
         <>
           {can("inventory.batches") && (
@@ -331,7 +346,7 @@ export function InventoryPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {items.map((item) => (
+              {paginatedItems.map((item) => (
                 <TableRow key={item.id}>
                   <TableCell>{item.code}</TableCell>
                   <TableCell>{item.name}</TableCell>
@@ -408,6 +423,12 @@ export function InventoryPage() {
               ))}
             </TableBody>
           </Table>
+          <ClientPagination
+            page={page}
+            totalItems={items.length}
+            pageSize={pageSize}
+            onPageChange={setPage}
+          />
         </QueryState>
       </PageSection>
 

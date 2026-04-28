@@ -33,8 +33,8 @@ public class PortalRepositoryImpl implements PortalRepository {
     @Override
     public List<DentistDto> findPublicDentists() {
         return jdbcTemplate.query("""
-            SELECT u.id, u.name, u.email, u.role, u.phone, d.specialization, d.license_number, d.years_experience,
-                   d.consultation_fee, d.bio, d.is_available, u.is_active
+            SELECT u.id, d.employee_code, u.name, u.email, u.role, u.phone, d.dob, d.workplace, d.degree,
+                   d.specialization, d.license_number, d.years_experience, d.consultation_fee, d.bio, d.is_available, u.is_active
             FROM users u
             JOIN dentists d ON d.id = u.id
             WHERE u.role = 'dentist' AND u.is_active = true AND d.is_available = true
@@ -158,10 +158,14 @@ public class PortalRepositoryImpl implements PortalRepository {
     private DentistDto mapDentist(ResultSet rs, int rowNum) throws SQLException {
         return new DentistDto(
             rs.getString("id"),
+            rs.getString("employee_code"),
             rs.getString("name"),
             rs.getString("email"),
             rs.getString("role"),
             rs.getString("phone"),
+            rs.getString("dob"),
+            rs.getString("workplace"),
+            rs.getString("degree"),
             rs.getString("specialization"),
             rs.getString("license_number"),
             rs.getInt("years_experience"),

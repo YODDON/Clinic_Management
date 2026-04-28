@@ -4,6 +4,7 @@ import com.dentalpro.module.service_catalog.dto.CreateDentalChairRequest;
 import com.dentalpro.module.service_catalog.dto.CreateDentalServiceRequest;
 import com.dentalpro.module.service_catalog.dto.DentalChairDto;
 import com.dentalpro.module.service_catalog.dto.DentalServiceDto;
+import com.dentalpro.module.service_catalog.dto.ServicePriceHistoryDto;
 import com.dentalpro.module.service_catalog.dto.UpdateDentalChairRequest;
 import com.dentalpro.module.service_catalog.dto.UpdateDentalServiceRequest;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -56,8 +57,36 @@ public class ServiceCatalogRepositoryImpl implements ServiceCatalogRepository {
     }
 
     @Override
+    public void updateServicePrice(String id, double price) {
+        jdbcTemplate.update("UPDATE dental_services SET price = ? WHERE id = ?", price, id);
+    }
+
+    @Override
+    public void insertPriceHistory(String id, String serviceId, double oldPrice, double newPrice, String changedBy, String changeNote) {
+        jdbcTemplate.update("""
+            INSERT INTO service_price_history (id, service_id, old_price, new_price, changed_by, change_note)
+            VALUES (?, ?, ?, ?, ?, ?)
+            """, id, serviceId, oldPrice, newPrice, changedBy, changeNote);
+    }
+
+    @Override
+    public List<ServicePriceHistoryDto> findPriceHistory(String serviceId) {
+        return jdbcTemplate.query("""
+            SELECT id, service_id, old_price, new_price, changed_by, change_note, created_at
+            FROM service_price_history
+            WHERE service_id = ?
+            ORDER BY created_at DESC
+            """, this::mapPriceHistory, serviceId);
+    }
+
+    @Override
     public void activateService(String id) {
         jdbcTemplate.update("UPDATE dental_services SET is_active = true WHERE id = ?", id);
+    }
+
+    @Override
+    public void deactivateService(String id) {
+        jdbcTemplate.update("UPDATE dental_services SET is_active = false WHERE id = ?", id);
     }
 
     @Override
@@ -126,6 +155,18 @@ public class ServiceCatalogRepositoryImpl implements ServiceCatalogRepository {
             rs.getInt("duration_minutes"),
             rs.getString("description"),
             rs.getBoolean("is_active")
+        );
+    }
+
+    private ServicePriceHistoryDto mapPriceHistory(ResultSet rs, int rowNum) throws SQLException {
+        return new ServicePriceHistoryDto(
+            rs.getString("id"),
+            rs.getString("service_id"),
+            rs.getDouble("old_price"),
+            rs.getDouble("new_price"),
+            rs.getString("changed_by"),
+            rs.getString("change_note"),
+            rs.getString("created_at")
         );
     }
 

@@ -27,8 +27,27 @@ public class TreatmentRecordRepositoryImpl implements TreatmentRecordRepository 
     }
 
     @Override
+    public List<TreatmentRecordDto> findAllForDentist(String dentistId) {
+        return jdbcTemplate.query(
+            baseSql() + " WHERE tr.dentist_id = ? ORDER BY tr.visit_date DESC",
+            this::mapRecord,
+            dentistId
+        );
+    }
+
+    @Override
     public List<TreatmentRecordDto> findById(String id) {
         return jdbcTemplate.query(baseSql() + " WHERE tr.id = ?", this::mapRecord, id);
+    }
+
+    @Override
+    public List<TreatmentRecordDto> findByIdForDentist(String id, String dentistId) {
+        return jdbcTemplate.query(
+            baseSql() + " WHERE tr.id = ? AND tr.dentist_id = ?",
+            this::mapRecord,
+            id,
+            dentistId
+        );
     }
 
     @Override
@@ -60,6 +79,11 @@ public class TreatmentRecordRepositoryImpl implements TreatmentRecordRepository 
             """, request.patientId(), request.appointmentId(), request.dentistId(), request.visitDate(), request.chiefComplaint(),
             request.diagnosis(), request.treatmentPlan(), request.treatmentDone(), request.toothChart(),
             request.nextVisitNote(), request.notes(), id);
+    }
+
+    @Override
+    public void updateAppointmentStatus(String appointmentId, String status) {
+        jdbcTemplate.update("UPDATE appointments SET status = ? WHERE id = ?", status, appointmentId);
     }
 
     @Override
@@ -102,6 +126,11 @@ public class TreatmentRecordRepositoryImpl implements TreatmentRecordRepository 
     }
 
     @Override
+    public void incrementInventoryStock(String inventoryId, int quantity) {
+        jdbcTemplate.update("UPDATE inventory SET stock = stock + ? WHERE id = ?", quantity, inventoryId);
+    }
+
+    @Override
     public TreatmentMaterialDto findMaterialById(String id) {
         return jdbcTemplate.queryForObject("""
             SELECT tm.id, tm.treatment_record_id, tm.inventory_id, i.name AS inventory_name, tm.quantity, tm.usage_note
@@ -109,6 +138,21 @@ public class TreatmentRecordRepositoryImpl implements TreatmentRecordRepository 
             JOIN inventory i ON i.id = tm.inventory_id
             WHERE tm.id = ?
             """, this::mapMaterial, id);
+    }
+
+    @Override
+    public void deleteMaterial(String id) {
+        jdbcTemplate.update("DELETE FROM treatment_materials WHERE id = ?", id);
+    }
+
+    @Override
+    public boolean invoiceExistsForRecord(String recordId) {
+        Integer value = jdbcTemplate.queryForObject(
+            "SELECT COUNT(*) FROM invoices WHERE treatment_record_id = ?",
+            Integer.class,
+            recordId
+        );
+        return value != null && value > 0;
     }
 
     @Override
