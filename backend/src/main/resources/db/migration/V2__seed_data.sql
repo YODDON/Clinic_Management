@@ -6,10 +6,6 @@ INSERT INTO users (id, email, name, role, password_hash, phone, is_active)
 SELECT 'user-dentist-001', 'dentist@dentalpro.local', 'BS. Tran Minh', 'dentist', '{noop}Dentist@123', '0900000001', TRUE
 WHERE NOT EXISTS (SELECT 1 FROM users WHERE email = 'dentist@dentalpro.local');
 
-INSERT INTO users (id, email, name, role, password_hash, phone, is_active)
-SELECT 'user-reception-001', 'reception@dentalpro.local', 'Le Tan DentalPro', 'receptionist', '{noop}Reception@123', '0900000002', TRUE
-WHERE NOT EXISTS (SELECT 1 FROM users WHERE email = 'reception@dentalpro.local');
-
 INSERT INTO dentists (id, specialization, license_number, years_experience, consultation_fee, bio, is_available)
 SELECT 'user-dentist-001', 'Rang ham mat', 'DEN-001', 8, 250000, 'Nha si tong quat', TRUE
 WHERE NOT EXISTS (SELECT 1 FROM dentists WHERE id = 'user-dentist-001');

@@ -2,7 +2,7 @@ CREATE TABLE IF NOT EXISTS users (
     id VARCHAR(36) PRIMARY KEY,
     email VARCHAR(255) NOT NULL UNIQUE,
     name VARCHAR(255) NOT NULL,
-    role ENUM('admin','dentist','receptionist') NOT NULL,
+    role ENUM('admin','dentist') NOT NULL,
     password_hash TEXT NOT NULL,
     phone VARCHAR(20),
     avatar_url TEXT,

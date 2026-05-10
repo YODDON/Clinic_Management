@@ -1,12 +1,11 @@
 import { useEffect, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { CalendarClock, Eye, Pencil, Plus, Trash2 } from "lucide-react";
+import { CalendarClock, Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { ClientPagination } from "@/components/common/ClientPagination";
 import { ConfirmActionDialog } from "@/components/common/ConfirmActionDialog";
-import { DetailDialog } from "@/components/common/DetailDialog";
 import { CrudFormDialog } from "@/components/common/CrudFormDialog";
 import { PageSection } from "@/components/common/PageSection";
 import { QueryState } from "@/components/common/QueryState";
@@ -49,10 +48,9 @@ function buildShiftFields(dentists: Dentist[]) {
       label: "Trạng thái",
       type: "select" as const,
       options: [
-        { label: "Planned", value: "planned" },
-        { label: "Active", value: "active" },
-        { label: "Completed", value: "completed" },
-        { label: "Cancelled", value: "cancelled" },
+        { label: "Đã lên ca", value: "planned" },
+        { label: "Đã hoàn tất", value: "completed" },
+        { label: "Nghỉ / off", value: "off" },
       ],
     },
     { name: "notes", label: "Ghi chú", type: "textarea" as const },
@@ -86,9 +84,9 @@ export function ShiftsPage() {
   const pageSize = 10;
   const [page, setPage] = useState(1);
   const [editingShift, setEditingShift] = useState<DentistShift | null>(null);
-  const [detailShift, setDetailShift] = useState<DentistShift | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [deleteShift, setDeleteShift] = useState<DentistShift | null>(null);
+  const canManageShiftRows = can("shifts.update") || can("shifts.delete");
 
   const shiftsQuery = useQuery({
     queryKey: ["shifts"],
@@ -185,7 +183,7 @@ export function ShiftsPage() {
                 <TableHead>Kết thúc</TableHead>
                 <TableHead>Trạng thái</TableHead>
                 <TableHead>Ghi chú</TableHead>
-                <TableHead className="text-right">Thao tác</TableHead>
+                {canManageShiftRows && <TableHead className="text-right">Thao tác</TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -199,44 +197,37 @@ export function ShiftsPage() {
                     <StatusBadge value={shift.status} />
                   </TableCell>
                   <TableCell>{shift.notes || "Không có"}</TableCell>
-                  <TableCell>
-                    <div className="action-buttons flex justify-end gap-1">
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        aria-label="Xem chi tiết"
-                        title="Xem chi tiết"
-                        onClick={() => setDetailShift(shift)}
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      {can("shifts.update") && (
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          aria-label="Sửa ca trực"
-                          title="Sửa ca trực"
-                          onClick={() => {
-                            setEditingShift(shift);
-                            setFormOpen(true);
-                          }}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                      )}
-                      {can("shifts.delete") && (
-                        <Button
-                          variant="destructive"
-                          size="icon"
-                          aria-label="Xóa ca trực"
-                          title="Xóa ca trực"
-                          onClick={() => setDeleteShift(shift)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
-                  </TableCell>
+                  {canManageShiftRows && (
+                    <TableCell>
+                      <div className="action-buttons flex justify-end gap-1">
+                        {can("shifts.update") && (
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            aria-label="Sửa ca trực"
+                            title="Sửa ca trực"
+                            onClick={() => {
+                              setEditingShift(shift);
+                              setFormOpen(true);
+                            }}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                        )}
+                        {can("shifts.delete") && (
+                          <Button
+                            variant="destructive"
+                            size="icon"
+                            aria-label="Xóa ca trực"
+                            title="Xóa ca trực"
+                            onClick={() => setDeleteShift(shift)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    </TableCell>
+                  )}
                 </TableRow>
               ))}
             </TableBody>
@@ -268,25 +259,6 @@ export function ShiftsPage() {
           onSubmit={async (values) => saveMutation.mutateAsync(values)}
         />
       )}
-
-      <DetailDialog
-        open={Boolean(detailShift)}
-        onOpenChange={(open) => !open && setDetailShift(null)}
-        title={detailShift?.dentistName || "Chi tiết ca trực"}
-        description="Thông tin ca trực"
-        items={
-          detailShift
-            ? [
-                { label: "Nha sĩ", value: detailShift.dentistName },
-                { label: "Ngày", value: formatDate(detailShift.shiftDate) },
-                { label: "Bắt đầu", value: detailShift.startTime },
-                { label: "Kết thúc", value: detailShift.endTime },
-                { label: "Trạng thái", value: detailShift.status },
-                { label: "Ghi chú", value: detailShift.notes || "Không có" },
-              ]
-            : []
-        }
-      />
 
       {can("shifts.delete") && (
         <ConfirmActionDialog

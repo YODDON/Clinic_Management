@@ -50,6 +50,7 @@ public class PortalRepositoryImpl implements PortalRepository {
             WHERE dentist_id = ?
               AND shift_date >= CURRENT_DATE()
               AND status <> 'off'
+              AND shift_date NOT IN (SELECT holiday_date FROM clinic_holidays)
             ORDER BY shift_date
             """, (rs, rowNum) -> rs.getString("shift_date"), dentistId);
     }
@@ -60,6 +61,7 @@ public class PortalRepositoryImpl implements PortalRepository {
             SELECT CONCAT(TIME_FORMAT(start_time, '%H:%i'), '|', TIME_FORMAT(end_time, '%H:%i')) AS slot_range
             FROM dentist_shifts
             WHERE dentist_id = ? AND shift_date = ? AND status <> 'off'
+              AND shift_date NOT IN (SELECT holiday_date FROM clinic_holidays)
             ORDER BY start_time
             """, (rs, rowNum) -> rs.getString("slot_range"), dentistId, date);
     }

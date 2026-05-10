@@ -127,5 +127,5 @@ SELECT 'invoice-item-036', 'invoice-032', 'inventory-001', 'Composite A2', 1, 85
 WHERE NOT EXISTS (SELECT 1 FROM invoice_items WHERE id = 'invoice-item-036');
 
 INSERT INTO payments (id, invoice_id, amount, payment_method, payment_date, notes, recorded_by)
-SELECT 'payment-030', 'invoice-032', 535000, 'card', '2026-04-28 09:45:00', 'Thanh toán thẻ tại quầy', 'user-reception-001'
+SELECT 'payment-030', 'invoice-032', 535000, 'card', '2026-04-28 09:45:00', 'Thanh toán thẻ tại quầy', 'user-admin-001'
 WHERE NOT EXISTS (SELECT 1 FROM payments WHERE id = 'payment-030');

@@ -3,6 +3,7 @@ import type { UserRole } from "@/types/api";
 export type AppRoutePath =
   | "/app/"
   | "/app/system"
+  | "/app/schedule-management"
   | "/app/patients"
   | "/app/dentists"
   | "/app/appointments"
@@ -14,6 +15,9 @@ export type AppRoutePath =
 
 export type PermissionKey =
   | "dashboard.view"
+  | "holidays.read"
+  | "holidays.write"
+  | "holidays.delete"
   | "users.read"
   | "users.write"
   | "users.status"
@@ -57,6 +61,7 @@ type AccessMap<T extends string> = Record<T, readonly UserRole[]>;
 export const routeAccess: AccessMap<AppRoutePath> = {
   "/app/": ["admin", "dentist"],
   "/app/system": ["admin"],
+  "/app/schedule-management": ["admin", "dentist"],
   "/app/patients": ["admin", "dentist"],
   "/app/dentists": ["admin", "dentist"],
   "/app/appointments": ["admin", "dentist"],
@@ -69,6 +74,9 @@ export const routeAccess: AccessMap<AppRoutePath> = {
 
 export const permissionAccess: AccessMap<PermissionKey> = {
   "dashboard.view": ["admin", "dentist"],
+  "holidays.read": ["admin", "dentist"],
+  "holidays.write": ["admin"],
+  "holidays.delete": ["admin"],
   "users.read": ["admin"],
   "users.write": ["admin"],
   "users.status": ["admin"],
@@ -90,7 +98,7 @@ export const permissionAccess: AccessMap<PermissionKey> = {
   "treatmentRecords.delete": ["admin", "dentist"],
   "shifts.read": ["admin", "dentist"],
   "shifts.create": ["admin"],
-  "shifts.update": ["admin", "dentist"],
+  "shifts.update": ["admin"],
   "shifts.delete": ["admin"],
   "inventory.read": ["admin", "dentist"],
   "inventory.write": ["admin"],
@@ -142,8 +150,8 @@ export function getDefaultRouteForRole(role: UserRole): string {
 
 export function getBookingRouteForRole(role: UserRole): string {
   const defaults: Record<UserRole, string> = {
-    admin: "/app/appointments",
-    dentist: "/app/appointments",
+    admin: "/app/schedule-management",
+    dentist: "/app/schedule-management",
     customer: "/my/appointments/new",
   };
 

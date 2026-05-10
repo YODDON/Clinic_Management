@@ -5,6 +5,7 @@ import com.dentalpro.exception.BadRequestException;
 import com.dentalpro.exception.ResourceNotFoundException;
 import com.dentalpro.module.appointment.dto.AppointmentDto;
 import com.dentalpro.module.dentist.dto.DentistDto;
+import com.dentalpro.module.holiday.service.ClinicHolidayService;
 import com.dentalpro.module.portal.dto.CreateCustomerAppointmentRequest;
 import com.dentalpro.module.portal.dto.CustomerProfileDto;
 import com.dentalpro.module.portal.dto.PublicAvailableDatesDto;
@@ -29,9 +30,14 @@ public class PortalServiceImpl implements PortalService {
     private static final DateTimeFormatter SLOT_FORMAT = DateTimeFormatter.ofPattern("HH:mm");
 
     private final PortalRepository portalRepository;
+    private final ClinicHolidayService clinicHolidayService;
 
-    public PortalServiceImpl(PortalRepository portalRepository) {
+    public PortalServiceImpl(
+        PortalRepository portalRepository,
+        ClinicHolidayService clinicHolidayService
+    ) {
         this.portalRepository = portalRepository;
+        this.clinicHolidayService = clinicHolidayService;
     }
 
     @Override
@@ -93,6 +99,9 @@ public class PortalServiceImpl implements PortalService {
         LocalDateTime appointmentDate = LocalDateTime.parse(request.appointmentDate());
         if (appointmentDate.isBefore(LocalDateTime.now())) {
             throw new BadRequestException("Khung giờ này đã qua. Vui lòng chọn giờ khác.");
+        }
+        if (clinicHolidayService.isHoliday(appointmentDate.toLocalDate())) {
+            throw new BadRequestException("Phòng khám nghỉ trong ngày này. Vui lòng chọn ngày khác.");
         }
 
         String slot = appointmentDate.toLocalTime().format(SLOT_FORMAT);

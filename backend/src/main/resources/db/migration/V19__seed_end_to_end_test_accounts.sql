@@ -13,20 +13,6 @@ SET email = 'flow.admin@dentalpro.local',
 WHERE id = 'user-flow-admin';
 
 INSERT INTO users (id, email, name, role, password_hash, phone, is_active)
-SELECT 'user-flow-reception', 'flow.reception@dentalpro.local', 'Flow Le Tan', 'receptionist', '{noop}Flow@123', '0901000002', TRUE
-WHERE NOT EXISTS (SELECT 1 FROM users WHERE id = 'user-flow-reception')
-  AND NOT EXISTS (SELECT 1 FROM users WHERE email = 'flow.reception@dentalpro.local');
-
-UPDATE users
-SET email = 'flow.reception@dentalpro.local',
-    name = 'Flow Le Tan',
-    role = 'receptionist',
-    password_hash = '{noop}Flow@123',
-    phone = '0901000002',
-    is_active = TRUE
-WHERE id = 'user-flow-reception';
-
-INSERT INTO users (id, email, name, role, password_hash, phone, is_active)
 SELECT 'user-flow-dentist', 'flow.dentist@dentalpro.local', 'BS. Flow Test', 'dentist', '{noop}Flow@123', '0901000003', TRUE
 WHERE NOT EXISTS (SELECT 1 FROM users WHERE id = 'user-flow-dentist')
   AND NOT EXISTS (SELECT 1 FROM users WHERE email = 'flow.dentist@dentalpro.local');

@@ -167,6 +167,19 @@ export type PublicAvailableDates = {
   dates: string[];
 };
 
+export type ClinicHoliday = {
+  id: string;
+  holidayDate: string;
+  name: string;
+  description: string | null;
+};
+
+export type ClinicHolidayPayload = {
+  holidayDate?: string;
+  name?: string;
+  description?: string | null;
+};
+
 export type CustomerAppointmentPayload = {
   dentistId: string;
   serviceId: string;

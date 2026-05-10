@@ -6,23 +6,10 @@ INSERT INTO users (id, email, name, role, password_hash, phone, is_active)
 SELECT 'user-admin-003', 'admin.finance@dentalpro.local', 'Trần Minh Châu', 'admin', '{noop}Admin@123', '0909001002', FALSE
 WHERE NOT EXISTS (SELECT 1 FROM users WHERE id = 'user-admin-003');
 
-INSERT INTO users (id, email, name, role, password_hash, phone, is_active)
-SELECT 'user-reception-002', 'reception2@dentalpro.local', 'Phạm Khánh An', 'receptionist', '{noop}Reception@123', '0909002001', TRUE
-WHERE NOT EXISTS (SELECT 1 FROM users WHERE id = 'user-reception-002');
-
-INSERT INTO users (id, email, name, role, password_hash, phone, is_active)
-SELECT 'user-reception-003', 'reception3@dentalpro.local', 'Đỗ Thảo Nhi', 'receptionist', '{noop}Reception@123', '0909002002', TRUE
-WHERE NOT EXISTS (SELECT 1 FROM users WHERE id = 'user-reception-003');
-
 UPDATE users
 SET name = 'Quản trị hệ thống',
     phone = COALESCE(NULLIF(phone, ''), '0900000000')
 WHERE id = 'user-admin-001';
-
-UPDATE users
-SET name = 'Lễ tân DentalPro',
-    phone = COALESCE(NULLIF(phone, ''), '0900000002')
-WHERE id = 'user-reception-001';
 
 UPDATE users
 SET phone = CASE id

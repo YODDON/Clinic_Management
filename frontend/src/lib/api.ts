@@ -4,6 +4,8 @@ import type {
   Appointment,
   AppointmentPayload,
   AuthUser,
+  ClinicHoliday,
+  ClinicHolidayPayload,
   CustomerAppointmentPayload,
   CustomerProfile,
   CustomerProfilePayload,
@@ -136,6 +138,16 @@ export const publicApi = {
 
 export const dashboardApi = {
   getStats: () => request<DashboardStats>("/dashboard/stats"),
+};
+
+export const holidaysApi = {
+  list: () => request<PageResponse<ClinicHoliday>>("/clinic-holidays"),
+  create: (
+    body: Required<Pick<ClinicHolidayPayload, "holidayDate" | "name">> & ClinicHolidayPayload,
+  ) => request<ClinicHoliday>("/clinic-holidays", { method: "POST", body }),
+  update: (id: string, body: ClinicHolidayPayload) =>
+    request<ClinicHoliday>(`/clinic-holidays/${id}`, { method: "PATCH", body }),
+  delete: (id: string) => request<void>(`/clinic-holidays/${id}`, { method: "DELETE" }),
 };
 
 export const usersApi = {

@@ -111,7 +111,7 @@ SELECT 'appointment-010', 'patient-007', 'user-dentist-001', 'service-006', 'cha
 WHERE NOT EXISTS (SELECT 1 FROM appointments WHERE id = 'appointment-010');
 
 INSERT INTO appointments (id, patient_id, dentist_id, service_id, chair_id, appointment_date, appointment_type, status, notes)
-SELECT 'appointment-011', 'patient-008', 'user-dentist-003', 'service-007', 'chair-003', '2026-04-25 14:00:00', 'Wisdom tooth extraction', 'confirmed', 'Confirmed by receptionist and pre-op note sent.'
+SELECT 'appointment-011', 'patient-008', 'user-dentist-003', 'service-007', 'chair-003', '2026-04-25 14:00:00', 'Wisdom tooth extraction', 'confirmed', 'Confirmed by admin and pre-op note sent.'
 WHERE NOT EXISTS (SELECT 1 FROM appointments WHERE id = 'appointment-011');
 
 INSERT INTO appointments (id, patient_id, dentist_id, service_id, chair_id, appointment_date, appointment_type, status, notes)

@@ -2,7 +2,7 @@
 
 Clinic Management là hệ thống quản lý phòng khám nha khoa gồm:
 
-- `V1`: ứng dụng nội bộ cho `admin`, `dentist`, `receptionist`
+- `V1`: ứng dụng nội bộ cho `admin`, `dentist`
 - `V2`: customer portal cho `customer`
 - dùng chung một backend, một database và một tập business rules
 
@@ -69,7 +69,6 @@ Clinic_Management/
 
 - `admin`
 - `dentist`
-- `receptionist`
 
 ### V2
 
@@ -94,7 +93,7 @@ Clinic_Management/
 ### Staff flow
 
 1. staff đăng nhập vào khu vực nội bộ
-2. receptionist hoặc admin xem lịch hẹn mới
+2. admin xem lịch hẹn mới
 3. staff xác nhận, điều phối, xử lý hồ sơ liên quan
 4. dentist theo dõi điều trị
 5. admin theo dõi vận hành, kho, hóa đơn

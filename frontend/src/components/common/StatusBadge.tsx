@@ -16,7 +16,7 @@ export function StatusBadge({ value }: { value: string | boolean | null | undefi
     normalized === "planned" ||
     normalized === "active"
       ? "default"
-      : normalized === "pending" || normalized === "warning" || normalized === "overdue"
+      : normalized === "pending" || normalized === "warning" || normalized === "overdue" || normalized === "off"
         ? "secondary"
         : normalized === "cancelled" || normalized === "inactive" || normalized === "urgent"
           ? "destructive"

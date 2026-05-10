@@ -2,7 +2,6 @@ import { Link, useLocation } from "@tanstack/react-router";
 import {
   Activity,
   Briefcase,
-  CalendarClock,
   CalendarDays,
   ClipboardList,
   Cog,
@@ -10,7 +9,6 @@ import {
   Package,
   Receipt,
   Stethoscope,
-  Users,
 } from "lucide-react";
 
 import { useRoleAccess } from "@/hooks/use-role-access";
@@ -39,14 +37,12 @@ const overview: NavItem[] = [{ title: "Tong quan", url: "/app/", icon: LayoutDas
 const system: NavItem[] = [{ title: "Quan ly he thong", url: "/app/system", icon: Cog }];
 
 const operations: NavItem[] = [
-  { title: "Lich hen", url: "/app/appointments", icon: CalendarDays },
-  { title: "Benh nhan", url: "/app/patients", icon: Users },
+  { title: "Quan ly lich kham", url: "/app/schedule-management", icon: CalendarDays },
   { title: "Ho so dieu tri", url: "/app/treatment-records", icon: ClipboardList },
 ];
 
 const clinic: NavItem[] = [
   { title: "Nha si", url: "/app/dentists", icon: Stethoscope },
-  { title: "Ca truc", url: "/app/shifts", icon: CalendarClock },
   { title: "Dich vu & Ghe nha", url: "/app/services", icon: Briefcase },
 ];
 

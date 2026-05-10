@@ -28,6 +28,7 @@ import { Route as AppTreatmentRecordsRouteImport } from './routes/app/treatment-
 import { Route as AppSystemRouteImport } from './routes/app/system'
 import { Route as AppShiftsRouteImport } from './routes/app/shifts'
 import { Route as AppServicesRouteImport } from './routes/app/services'
+import { Route as AppScheduleManagementRouteImport } from './routes/app/schedule-management'
 import { Route as AppPatientsRouteImport } from './routes/app/patients'
 import { Route as AppInvoicesRouteImport } from './routes/app/invoices'
 import { Route as AppInventoryRouteImport } from './routes/app/inventory'
@@ -134,6 +135,11 @@ const AppServicesRoute = AppServicesRouteImport.update({
   path: '/app/services',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppScheduleManagementRoute = AppScheduleManagementRouteImport.update({
+  id: '/app/schedule-management',
+  path: '/app/schedule-management',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppPatientsRoute = AppPatientsRouteImport.update({
   id: '/app/patients',
   path: '/app/patients',
@@ -202,6 +208,7 @@ export interface FileRoutesByFullPath {
   '/app/inventory': typeof AppInventoryRoute
   '/app/invoices': typeof AppInvoicesRoute
   '/app/patients': typeof AppPatientsRoute
+  '/app/schedule-management': typeof AppScheduleManagementRoute
   '/app/services': typeof AppServicesRoute
   '/app/shifts': typeof AppShiftsRoute
   '/app/system': typeof AppSystemRoute
@@ -233,6 +240,7 @@ export interface FileRoutesByTo {
   '/app/inventory': typeof AppInventoryRoute
   '/app/invoices': typeof AppInvoicesRoute
   '/app/patients': typeof AppPatientsRoute
+  '/app/schedule-management': typeof AppScheduleManagementRoute
   '/app/services': typeof AppServicesRoute
   '/app/shifts': typeof AppShiftsRoute
   '/app/system': typeof AppSystemRoute
@@ -263,6 +271,7 @@ export interface FileRoutesById {
   '/app/inventory': typeof AppInventoryRoute
   '/app/invoices': typeof AppInvoicesRoute
   '/app/patients': typeof AppPatientsRoute
+  '/app/schedule-management': typeof AppScheduleManagementRoute
   '/app/services': typeof AppServicesRoute
   '/app/shifts': typeof AppShiftsRoute
   '/app/system': typeof AppSystemRoute
@@ -296,6 +305,7 @@ export interface FileRouteTypes {
     | '/app/inventory'
     | '/app/invoices'
     | '/app/patients'
+    | '/app/schedule-management'
     | '/app/services'
     | '/app/shifts'
     | '/app/system'
@@ -327,6 +337,7 @@ export interface FileRouteTypes {
     | '/app/inventory'
     | '/app/invoices'
     | '/app/patients'
+    | '/app/schedule-management'
     | '/app/services'
     | '/app/shifts'
     | '/app/system'
@@ -356,6 +367,7 @@ export interface FileRouteTypes {
     | '/app/inventory'
     | '/app/invoices'
     | '/app/patients'
+    | '/app/schedule-management'
     | '/app/services'
     | '/app/shifts'
     | '/app/system'
@@ -388,6 +400,7 @@ export interface RootRouteChildren {
   AppInventoryRoute: typeof AppInventoryRoute
   AppInvoicesRoute: typeof AppInvoicesRoute
   AppPatientsRoute: typeof AppPatientsRoute
+  AppScheduleManagementRoute: typeof AppScheduleManagementRoute
   AppServicesRoute: typeof AppServicesRoute
   AppShiftsRoute: typeof AppShiftsRoute
   AppSystemRoute: typeof AppSystemRoute
@@ -533,6 +546,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppServicesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/app/schedule-management': {
+      id: '/app/schedule-management'
+      path: '/app/schedule-management'
+      fullPath: '/app/schedule-management'
+      preLoaderRoute: typeof AppScheduleManagementRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/app/patients': {
       id: '/app/patients'
       path: '/app/patients'
@@ -653,6 +673,7 @@ const rootRouteChildren: RootRouteChildren = {
   AppInventoryRoute: AppInventoryRoute,
   AppInvoicesRoute: AppInvoicesRoute,
   AppPatientsRoute: AppPatientsRoute,
+  AppScheduleManagementRoute: AppScheduleManagementRoute,
   AppServicesRoute: AppServicesRoute,
   AppShiftsRoute: AppShiftsRoute,
   AppSystemRoute: AppSystemRoute,
