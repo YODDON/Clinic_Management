@@ -15,6 +15,8 @@ import type {
   DentalService,
   DentalServicePayload,
   Dentist,
+  DentistDuty,
+  DentistDutyPayload,
   DentistPayload,
   DentistShift,
   DentistShiftPayload,
@@ -224,6 +226,16 @@ export const shiftsApi = {
   update: (id: string, body: DentistShiftPayload) =>
     request<DentistShift>(`/dentist-shifts/${id}`, { method: "PATCH", body }),
   delete: (id: string) => request<void>(`/dentist-shifts/${id}`, { method: "DELETE" }),
+};
+
+export const dutiesApi = {
+  list: () => request<PageResponse<DentistDuty>>("/dentist-duties"),
+  create: (
+    body: Required<Pick<DentistDutyPayload, "dutyDate" | "dentistId">> & DentistDutyPayload,
+  ) => request<DentistDuty>("/dentist-duties", { method: "POST", body }),
+  update: (id: string, body: DentistDutyPayload) =>
+    request<DentistDuty>(`/dentist-duties/${id}`, { method: "PATCH", body }),
+  delete: (id: string) => request<void>(`/dentist-duties/${id}`, { method: "DELETE" }),
 };
 
 export const inventoryApi = {

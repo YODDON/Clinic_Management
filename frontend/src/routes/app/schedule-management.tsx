@@ -1,14 +1,15 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import {
+  ArrowLeft,
   ArrowRight,
   CalendarClock,
   CalendarDays,
   ClipboardList,
   Eye,
   Plus,
-  Stethoscope,
+  ShieldCheck,
   Trash2,
   UserRound,
 } from "lucide-react";
@@ -16,13 +17,14 @@ import { toast } from "sonner";
 
 import { ConfirmActionDialog } from "@/components/common/ConfirmActionDialog";
 import { CrudFormDialog } from "@/components/common/CrudFormDialog";
-import { PageSection } from "@/components/common/PageSection";
+import { ClientPagination } from "@/components/common/ClientPagination";
 import { QueryState } from "@/components/common/QueryState";
 import { StatCard } from "@/components/common/StatCard";
 import { StatusBadge } from "@/components/common/StatusBadge";
 import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -32,7 +34,14 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useRoleAccess } from "@/hooks/use-role-access";
-import { appointmentsApi, dentistsApi, holidaysApi, patientsApi, shiftsApi } from "@/lib/api";
+import {
+  appointmentsApi,
+  dentistsApi,
+  dutiesApi,
+  holidaysApi,
+  patientsApi,
+  shiftsApi,
+} from "@/lib/api";
 import { formatDate, formatDateTime } from "@/lib/format";
 import { queryClient } from "@/lib/query-client";
 import type {
@@ -40,17 +49,14 @@ import type {
   ClinicHoliday,
   ClinicHolidayPayload,
   Dentist,
+  DentistDuty,
+  DentistDutyPayload,
   DentistShift,
   DentistShiftPayload,
+  Patient,
 } from "@/types/api";
 
-type SectionKey =
-  | "holidays"
-  | "shifts"
-  | "roster"
-  | "booking"
-  | "tracking"
-  | "patients";
+type SectionKey = "holidays" | "shifts" | "roster" | "booking" | "tracking" | "patients";
 
 type SectionItem = {
   key: SectionKey;
@@ -59,47 +65,24 @@ type SectionItem = {
 };
 
 const sections: SectionItem[] = [
-  {
-    key: "holidays",
-    title: "Thiết lập ngày nghỉ",
-    description: "Quản lý ngày nghỉ của phòng khám.",
-  },
-  {
-    key: "shifts",
-    title: "Thiết lập ca làm việc",
-    description: "Tạo và chỉnh sửa ca làm việc.",
-  },
+  { key: "holidays", title: "Thiết lập ngày nghỉ", description: "Quản lý ngày nghỉ của phòng khám." },
+  { key: "shifts", title: "Thiết lập ca làm việc", description: "Tạo và chỉnh sửa ca làm việc." },
   {
     key: "roster",
     title: "Đăng ký lịch trực bác sĩ",
-    description: "Quản lý lịch trực của bác sĩ.",
+    description: "Phân công bác sĩ chịu trách nhiệm chính trong ngày.",
   },
-  {
-    key: "booking",
-    title: "Đăng ký lịch khám",
-    description: "Tạo lịch khám cho bệnh nhân.",
-  },
-  {
-    key: "tracking",
-    title: "Theo dõi lịch khám",
-    description: "Theo dõi trạng thái lịch khám.",
-  },
-  {
-    key: "patients",
-    title: "Quản lý bệnh nhân",
-    description: "Quản lý thông tin bệnh nhân.",
-  },
+  { key: "booking", title: "Đăng ký lịch khám", description: "Tạo lịch khám cho bệnh nhân." },
+  { key: "tracking", title: "Theo dõi lịch khám", description: "Theo dõi trạng thái lịch khám." },
+  { key: "patients", title: "Quản lý bệnh nhân", description: "Quản lý thông tin bệnh nhân." },
 ];
+
+const defaultSection: SectionKey = "holidays";
 
 const holidayFields = [
   { name: "holidayDate", label: "Ngày nghỉ", type: "date" as const, required: true },
-  { name: "name", label: "Tên ngày nghỉ", required: true, placeholder: "Ví dụ: Giỗ Tổ Hùng Vương" },
-  {
-    name: "description",
-    label: "Mô tả",
-    type: "textarea" as const,
-    placeholder: "Ghi chú phạm vi nghỉ hoặc thông báo vận hành",
-  },
+  { name: "name", label: "Tên ngày nghỉ", required: true, placeholder: "Ví dụ: Nghỉ lễ quốc gia" },
+  { name: "description", label: "Mô tả", type: "textarea" as const, placeholder: "Ghi chú thêm nếu cần" },
 ];
 
 function buildShiftFields(dentists: Dentist[]) {
@@ -119,12 +102,34 @@ function buildShiftFields(dentists: Dentist[]) {
       label: "Trạng thái",
       type: "select" as const,
       options: [
-        { label: "Đã lên ca", value: "planned" },
-        { label: "Đã hoàn tất", value: "completed" },
-        { label: "Nghỉ / off", value: "off" },
+        { label: "Planned", value: "planned" },
+        { label: "Completed", value: "completed" },
+        { label: "Off", value: "off" },
       ],
     },
     { name: "notes", label: "Ghi chú", type: "textarea" as const },
+  ];
+}
+
+function buildDutyFields(dentists: Dentist[], hasSelectedDate: boolean) {
+  return [
+    { name: "dutyDate", label: "Ngày trực", type: "date" as const, required: true },
+    {
+      name: "dentistId",
+      label: "Bác sĩ trực chính",
+      type: "select" as const,
+      required: true,
+      options: dentists.map((dentist) => ({ label: dentist.name, value: dentist.id })),
+      description: hasSelectedDate
+        ? "Chỉ hiển thị các bác sĩ có ca làm việc trong ngày đã chọn."
+        : "Hãy chọn ngày trực trước, sau đó hệ thống sẽ lọc bác sĩ đang có ca làm việc.",
+    },
+    {
+      name: "notes",
+      label: "Ghi chú",
+      type: "textarea" as const,
+      placeholder: "Ví dụ: phụ trách tiếp nhận bệnh nhân vãng lai hoặc bàn giao cuối ngày",
+    },
   ];
 }
 
@@ -166,21 +171,68 @@ function toShiftPayload(values: Record<string, string>): DentistShiftPayload {
   };
 }
 
+function toDutyValues(duty?: DentistDuty) {
+  return {
+    dutyDate: duty?.dutyDate?.slice(0, 10) ?? "",
+    dentistId: duty?.dentistId ?? "",
+    notes: duty?.notes ?? "",
+  };
+}
+
+function toDutyPayload(values: Record<string, string>): DentistDutyPayload {
+  return {
+    dutyDate: values.dutyDate,
+    dentistId: values.dentistId,
+    notes: values.notes || null,
+  };
+}
+
+function getTodayDateValue() {
+  const now = new Date();
+  const local = new Date(now.getTime() - now.getTimezoneOffset() * 60_000);
+  return local.toISOString().slice(0, 10);
+}
+
+function shiftDateByDays(dateValue: string, amount: number) {
+  const base = dateValue ? new Date(`${dateValue}T00:00:00`) : new Date();
+  base.setDate(base.getDate() + amount);
+  const local = new Date(base.getTime() - base.getTimezoneOffset() * 60_000);
+  return local.toISOString().slice(0, 10);
+}
+
 export const Route = createFileRoute("/app/schedule-management")({
+  validateSearch: (search: Record<string, unknown>) => {
+    const section =
+      typeof search.section === "string" &&
+      sections.some((item) => item.key === search.section)
+        ? (search.section as SectionKey)
+        : defaultSection;
+    return { section };
+  },
   component: ScheduleManagementPage,
   head: () => ({ meta: [{ title: "Quản lý lịch khám | DentalPro" }] }),
 });
 
 function ScheduleManagementPage() {
   const navigate = useNavigate();
-  const { can, role } = useRoleAccess();
-  const [section, setSection] = useState<SectionKey>("holidays");
+  const search = Route.useSearch();
+  const { can } = useRoleAccess();
+  const section = search.section;
+
   const [editingHoliday, setEditingHoliday] = useState<ClinicHoliday | null>(null);
   const [holidayFormOpen, setHolidayFormOpen] = useState(false);
   const [deleteHoliday, setDeleteHoliday] = useState<ClinicHoliday | null>(null);
+
   const [editingShift, setEditingShift] = useState<DentistShift | null>(null);
   const [shiftFormOpen, setShiftFormOpen] = useState(false);
   const [deleteShift, setDeleteShift] = useState<DentistShift | null>(null);
+  const [shiftFilterDate, setShiftFilterDate] = useState(getTodayDateValue);
+  const [shiftPage, setShiftPage] = useState(1);
+
+  const [editingDuty, setEditingDuty] = useState<DentistDuty | null>(null);
+  const [dutyFormOpen, setDutyFormOpen] = useState(false);
+  const [deleteDuty, setDeleteDuty] = useState<DentistDuty | null>(null);
+  const [dutyFormValues, setDutyFormValues] = useState<Record<string, string>>(toDutyValues());
 
   const holidaysQuery = useQuery({
     queryKey: ["clinic-holidays"],
@@ -189,6 +241,10 @@ function ScheduleManagementPage() {
   const shiftsQuery = useQuery({
     queryKey: ["shifts"],
     queryFn: async () => (await shiftsApi.list()).content,
+  });
+  const dutiesQuery = useQuery({
+    queryKey: ["dentist-duties"],
+    queryFn: async () => (await dutiesApi.list()).content,
   });
   const dentistsQuery = useQuery({
     queryKey: ["dentists", "options"],
@@ -205,16 +261,20 @@ function ScheduleManagementPage() {
 
   const holidays = holidaysQuery.data || [];
   const shifts = shiftsQuery.data || [];
+  const duties = dutiesQuery.data || [];
+  const dentists = dentistsQuery.data || [];
   const appointments = appointmentsQuery.data || [];
   const patients = patientsQuery.data || [];
-  const dentists = dentistsQuery.data || [];
 
   const holidaySaveMutation = useMutation({
     mutationFn: async (values: Record<string, string>) => {
       const payload = toHolidayPayload(values);
       return editingHoliday
         ? holidaysApi.update(editingHoliday.id, payload)
-        : holidaysApi.create(payload as Required<Pick<ClinicHolidayPayload, "holidayDate" | "name">> & ClinicHolidayPayload);
+        : holidaysApi.create(
+            payload as Required<Pick<ClinicHolidayPayload, "holidayDate" | "name">> &
+              ClinicHolidayPayload,
+          );
     },
     onSuccess: async () => {
       toast.success(editingHoliday ? "Đã cập nhật ngày nghỉ" : "Đã thêm ngày nghỉ");
@@ -240,7 +300,12 @@ function ScheduleManagementPage() {
       const payload = toShiftPayload(values);
       return editingShift
         ? shiftsApi.update(editingShift.id, payload)
-        : shiftsApi.create(payload as Required<Pick<DentistShiftPayload, "dentistId" | "shiftDate" | "startTime" | "endTime">> & DentistShiftPayload);
+        : shiftsApi.create(
+            payload as Required<
+              Pick<DentistShiftPayload, "dentistId" | "shiftDate" | "startTime" | "endTime">
+            > &
+              DentistShiftPayload,
+          );
     },
     onSuccess: async () => {
       toast.success(editingShift ? "Đã cập nhật ca làm việc" : "Đã tạo ca làm việc");
@@ -261,6 +326,35 @@ function ScheduleManagementPage() {
     onError: (error: Error) => toast.error(error.message),
   });
 
+  const dutySaveMutation = useMutation({
+    mutationFn: async (values: Record<string, string>) => {
+      const payload = toDutyPayload(values);
+      return editingDuty
+        ? dutiesApi.update(editingDuty.id, payload)
+        : dutiesApi.create(
+            payload as Required<Pick<DentistDutyPayload, "dutyDate" | "dentistId">> &
+              DentistDutyPayload,
+          );
+    },
+    onSuccess: async () => {
+      toast.success(editingDuty ? "Đã cập nhật lịch trực" : "Đã tạo lịch trực");
+      setDutyFormOpen(false);
+      setEditingDuty(null);
+      await queryClient.invalidateQueries({ queryKey: ["dentist-duties"] });
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+
+  const dutyDeleteMutation = useMutation({
+    mutationFn: async (dutyId: string) => dutiesApi.delete(dutyId),
+    onSuccess: async () => {
+      toast.success("Đã xóa lịch trực");
+      setDeleteDuty(null);
+      await queryClient.invalidateQueries({ queryKey: ["dentist-duties"] });
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+
   const appointmentStats = useMemo(() => {
     const total = appointments.length;
     const pending = appointments.filter((item) => item.status === "pending").length;
@@ -268,18 +362,6 @@ function ScheduleManagementPage() {
     const completed = appointments.filter((item) => item.status === "completed").length;
     return { total, pending, confirmed, completed };
   }, [appointments]);
-
-  const groupedRoster = useMemo(() => {
-    return dentists
-      .map((dentist) => ({
-        dentist,
-        shifts: shifts
-          .filter((shift) => shift.dentistId === dentist.id)
-          .sort((a, b) => a.shiftDate.localeCompare(b.shiftDate))
-          .slice(0, 4),
-      }))
-      .filter((item) => item.shifts.length > 0);
-  }, [dentists, shifts]);
 
   const recentAppointments = useMemo(
     () =>
@@ -290,8 +372,74 @@ function ScheduleManagementPage() {
   );
 
   const recentPatients = useMemo(() => patients.slice(0, 8), [patients]);
+
+  const rosterRows = useMemo(
+    () => [...duties].sort((a, b) => a.dutyDate.localeCompare(b.dutyDate)),
+    [duties],
+  );
+
+  const eligibleDutyDentists = useMemo(() => {
+    if (!dutyFormValues.dutyDate) {
+      return [];
+    }
+
+    const dentistIds = new Set(
+      shifts
+        .filter((shift) => shift.shiftDate.slice(0, 10) === dutyFormValues.dutyDate && shift.status !== "off")
+        .map((shift) => shift.dentistId),
+    );
+
+    return dentists.filter((dentist) => dentistIds.has(dentist.id));
+  }, [dentists, dutyFormValues.dutyDate, shifts]);
+
+  useEffect(() => {
+    if (!dutyFormOpen) {
+      return;
+    }
+
+    if (!dutyFormValues.dentistId) {
+      return;
+    }
+
+    const isStillEligible = eligibleDutyDentists.some((dentist) => dentist.id === dutyFormValues.dentistId);
+    if (!isStillEligible) {
+      setDutyFormValues((current) => ({ ...current, dentistId: "" }));
+    }
+  }, [dutyFormOpen, dutyFormValues.dentistId, eligibleDutyDentists]);
+
+  const shiftPreview = useMemo(
+    () =>
+      shifts
+        .filter((shift) => shift.shiftDate.slice(0, 10) === shiftFilterDate)
+        .sort((a, b) => {
+          const nameCompare = a.dentistName.localeCompare(b.dentistName);
+          if (nameCompare !== 0) return nameCompare;
+          return a.startTime.localeCompare(b.startTime);
+        }),
+    [shiftFilterDate, shifts],
+  );
+
+  const shiftPageSize = 10;
+  const shiftTotalPages = Math.max(1, Math.ceil(shiftPreview.length / shiftPageSize));
+  const paginatedShiftPreview = useMemo(
+    () => shiftPreview.slice((shiftPage - 1) * shiftPageSize, shiftPage * shiftPageSize),
+    [shiftPage, shiftPreview],
+  );
+
+  useEffect(() => {
+    setShiftPage(1);
+  }, [shiftFilterDate]);
+
+  useEffect(() => {
+    if (shiftPage > shiftTotalPages) {
+      setShiftPage(shiftTotalPages);
+    }
+  }, [shiftPage, shiftTotalPages]);
+
   const selectedSection = sections.find((item) => item.key === section) || sections[0];
+  const canManageHolidayRows = can("holidays.write") || can("holidays.delete");
   const canManageShiftRows = can("shifts.update") || can("shifts.delete");
+  const canManageDutyRows = can("duties.update") || can("duties.delete");
 
   return (
     <AppShell
@@ -318,46 +466,31 @@ function ScheduleManagementPage() {
           >
             <Plus className="mr-2 h-4 w-4" /> Thêm ca làm việc
           </Button>
+        ) : section === "roster" && can("duties.create") ? (
+          <Button
+            size="sm"
+            onClick={() => {
+              setEditingDuty(null);
+              setDutyFormValues(toDutyValues());
+              setDutyFormOpen(true);
+            }}
+          >
+            <Plus className="mr-2 h-4 w-4" /> Thêm lịch trực
+          </Button>
         ) : undefined
       }
     >
-      <div className="grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">
-        <Card className="border-slate-200 bg-[linear-gradient(180deg,#f8fbff_0%,#eef7ff_100%)]">
-          <CardContent className="space-y-3">
-            {sections.map((item) => {
-              const active = item.key === section;
-              return (
-                <button
-                  key={item.key}
-                  type="button"
-                  className={`w-full rounded-2xl border px-4 py-3 text-left transition ${
-                    active
-                      ? "border-sky-500 bg-sky-50 shadow-sm"
-                      : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50"
-                  }`}
-                  onClick={() => setSection(item.key)}
-                >
-                  <div className="font-semibold text-slate-900">{item.title}</div>
-                  <div className="mt-1 text-sm text-slate-600">{item.description}</div>
-                </button>
-              );
-            })}
-          </CardContent>
+      <div className="space-y-6">
+        <Card className="border-slate-200 bg-[radial-gradient(circle_at_top_left,#eff8ff_0,#ffffff_55%,#f8fafc_100%)]">
+          <CardHeader>
+            <CardTitle className="text-2xl text-slate-900">{selectedSection.title}</CardTitle>
+            <CardDescription className="text-base">{selectedSection.description}</CardDescription>
+          </CardHeader>
         </Card>
 
-        <div className="space-y-6">
-          <Card className="border-slate-200 bg-[radial-gradient(circle_at_top_left,#eff8ff_0,#ffffff_50%,#f8fafc_100%)]">
-            <CardHeader>
-              <CardTitle className="text-xl">{selectedSection.title}</CardTitle>
-              <CardDescription>{selectedSection.description}</CardDescription>
-            </CardHeader>
-          </Card>
-
-          {section === "holidays" && (
-            <PageSection
-              title="Danh sách ngày nghỉ của phòng khám"
-              description="Ngày nghỉ lễ có hiệu lực toàn hệ thống và sẽ chặn luồng đặt lịch."
-            >
+        {section === "holidays" && (
+          <Card className="border-slate-200">
+            <CardContent className="pt-6">
               <QueryState
                 isLoading={holidaysQuery.isLoading}
                 error={holidaysQuery.error}
@@ -373,7 +506,7 @@ function ScheduleManagementPage() {
                       <TableHead>Ngày nghỉ</TableHead>
                       <TableHead>Tên</TableHead>
                       <TableHead>Mô tả</TableHead>
-                      {canManageShiftRows && <TableHead className="text-right">Thao tác</TableHead>}
+                      {canManageHolidayRows && <TableHead className="text-right">Thao tác</TableHead>}
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -382,56 +515,83 @@ function ScheduleManagementPage() {
                         <TableCell>{formatDate(holiday.holidayDate)}</TableCell>
                         <TableCell className="font-medium">{holiday.name}</TableCell>
                         <TableCell>{holiday.description || "Không có"}</TableCell>
-                        <TableCell>
-                          <div className="flex justify-end gap-2">
-                            {can("holidays.write") && (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => {
-                                  setEditingHoliday(holiday);
-                                  setHolidayFormOpen(true);
-                                }}
-                              >
-                                Chỉnh sửa
-                              </Button>
-                            )}
-                            {can("holidays.delete") && (
-                              <Button
-                                variant="destructive"
-                                size="sm"
-                                onClick={() => setDeleteHoliday(holiday)}
-                              >
-                                <Trash2 className="mr-2 h-4 w-4" /> Xóa
-                              </Button>
-                            )}
-                          </div>
-                        </TableCell>
+                        {canManageHolidayRows && (
+                          <TableCell>
+                            <div className="flex justify-end gap-2">
+                              {can("holidays.write") && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                    setEditingHoliday(holiday);
+                                    setHolidayFormOpen(true);
+                                  }}
+                                >
+                                  Chỉnh sửa
+                                </Button>
+                              )}
+                              {can("holidays.delete") && (
+                                <Button variant="destructive" size="sm" onClick={() => setDeleteHoliday(holiday)}>
+                                  <Trash2 className="mr-2 h-4 w-4" /> Xóa
+                                </Button>
+                              )}
+                            </div>
+                          </TableCell>
+                        )}
                       </TableRow>
                     ))}
                   </TableBody>
                 </Table>
               </QueryState>
-            </PageSection>
-          )}
+            </CardContent>
+          </Card>
+        )}
 
-          {section === "shifts" && (
-            <PageSection
-              title="Ca làm việc"
-              description="Trạng thái ca đã được chuẩn hóa lại theo backend: planned, completed, off."
-              actions={
-                <Button variant="outline" size="sm" onClick={() => void navigate({ to: "/app/shifts" })}>
-                  Mở trang chi tiết <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              }
-            >
+        {section === "shifts" && (
+          <Card className="border-slate-200">
+            <CardContent className="pt-6">
+              <div className="mb-4 flex flex-col gap-3">
+                <div className="w-full max-w-xs space-y-2">
+                  <div className="text-sm font-medium text-slate-700">Lọc theo ngày</div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      className="shrink-0"
+                      onClick={() => setShiftFilterDate((current) => shiftDateByDays(current, -1))}
+                      aria-label="Lùi 1 ngày"
+                    >
+                      <ArrowLeft className="h-4 w-4" />
+                    </Button>
+                    <Input
+                      type="date"
+                      value={shiftFilterDate}
+                      onChange={(event) => setShiftFilterDate(event.target.value)}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      className="shrink-0"
+                      onClick={() => setShiftFilterDate((current) => shiftDateByDays(current, 1))}
+                      aria-label="Tới 1 ngày"
+                    >
+                      <ArrowRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Mặc định đang ưu tiên hiển thị toàn bộ bác sĩ có ca làm việc hôm nay.
+                  </p>
+                </div>
+              </div>
               <QueryState
                 isLoading={shiftsQuery.isLoading}
                 error={shiftsQuery.error}
-                isEmpty={shifts.length === 0}
+                isEmpty={shiftPreview.length === 0}
                 emptyIcon={CalendarClock}
-                emptyTitle="Chưa có ca làm việc"
-                emptyDescription="Danh sách ca làm việc sẽ hiển thị tại đây."
+                emptyTitle="Không có ca làm việc trong ngày này"
+                emptyDescription="Hãy chọn một ngày khác để xem bác sĩ nào đang có ca làm việc."
                 onRetry={() => shiftsQuery.refetch()}
               >
                 <Table>
@@ -446,11 +606,13 @@ function ScheduleManagementPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {shifts.slice(0, 10).map((shift) => (
+                    {paginatedShiftPreview.map((shift) => (
                       <TableRow key={shift.id}>
                         <TableCell>{formatDate(shift.shiftDate)}</TableCell>
                         <TableCell>{shift.dentistName}</TableCell>
-                        <TableCell>{shift.startTime} - {shift.endTime}</TableCell>
+                        <TableCell>
+                          {shift.startTime} - {shift.endTime}
+                        </TableCell>
                         <TableCell>
                           <StatusBadge value={shift.status} />
                         </TableCell>
@@ -471,11 +633,78 @@ function ScheduleManagementPage() {
                                 </Button>
                               )}
                               {can("shifts.delete") && (
+                                <Button variant="destructive" size="sm" onClick={() => setDeleteShift(shift)}>
+                                  <Trash2 className="mr-2 h-4 w-4" /> Xóa
+                                </Button>
+                              )}
+                            </div>
+                          </TableCell>
+                        )}
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+                <ClientPagination
+                  page={shiftPage}
+                  totalItems={shiftPreview.length}
+                  pageSize={shiftPageSize}
+                  onPageChange={setShiftPage}
+                />
+              </QueryState>
+            </CardContent>
+          </Card>
+        )}
+
+        {section === "roster" && (
+          <Card className="border-slate-200">
+            <CardContent className="pt-6">
+              <QueryState
+                isLoading={dutiesQuery.isLoading || shiftsQuery.isLoading}
+                error={dutiesQuery.error || shiftsQuery.error}
+                isEmpty={rosterRows.length === 0}
+                emptyIcon={ShieldCheck}
+                emptyTitle="Chưa có lịch trực"
+                emptyDescription="Khi admin phân công bác sĩ trực chính, danh sách sẽ hiển thị tại đây."
+                onRetry={() => {
+                  void dutiesQuery.refetch();
+                  void shiftsQuery.refetch();
+                }}
+              >
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Ngày trực</TableHead>
+                      <TableHead>Bác sĩ trực chính</TableHead>
+                      <TableHead>Chuyên môn</TableHead>
+                      <TableHead>Ghi chú</TableHead>
+                      {canManageDutyRows && <TableHead className="text-right">Thao tác</TableHead>}
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {rosterRows.map((duty) => (
+                      <TableRow key={duty.id}>
+                        <TableCell>{formatDate(duty.dutyDate)}</TableCell>
+                        <TableCell className="font-medium">{duty.dentistName}</TableCell>
+                        <TableCell>{duty.specialization || "Không có"}</TableCell>
+                        <TableCell>{duty.notes || "Không có"}</TableCell>
+                        {canManageDutyRows && (
+                          <TableCell>
+                            <div className="flex justify-end gap-2">
+                              {can("duties.update") && (
                                 <Button
-                                  variant="destructive"
+                                  variant="outline"
                                   size="sm"
-                                  onClick={() => setDeleteShift(shift)}
+                                  onClick={() => {
+                                    setEditingDuty(duty);
+                                    setDutyFormValues(toDutyValues(duty));
+                                    setDutyFormOpen(true);
+                                  }}
                                 >
+                                  Chỉnh sửa
+                                </Button>
+                              )}
+                              {can("duties.delete") && (
+                                <Button variant="destructive" size="sm" onClick={() => setDeleteDuty(duty)}>
                                   <Trash2 className="mr-2 h-4 w-4" /> Xóa
                                 </Button>
                               )}
@@ -487,53 +716,24 @@ function ScheduleManagementPage() {
                   </TableBody>
                 </Table>
               </QueryState>
-            </PageSection>
-          )}
+            </CardContent>
+          </Card>
+        )}
 
-          {section === "roster" && (
-            <div className="grid gap-4 xl:grid-cols-2">
-              {groupedRoster.map(({ dentist, shifts: dentistShifts }) => (
-                <Card key={dentist.id} className="border-slate-200">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-base">
-                      <Stethoscope className="h-4 w-4" /> {dentist.name}
-                    </CardTitle>
-                    <CardDescription>{dentist.specialization}</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    {dentistShifts.map((shift) => (
-                      <div key={shift.id} className="flex items-center justify-between rounded-xl border border-slate-200 px-4 py-3">
-                        <div>
-                          <div className="font-medium">{formatDate(shift.shiftDate)}</div>
-                          <div className="text-sm text-muted-foreground">
-                            {shift.startTime} - {shift.endTime}
-                          </div>
-                        </div>
-                        <StatusBadge value={shift.status} />
-                      </div>
-                    ))}
-                  </CardContent>
-                </Card>
-              ))}
+        {section === "booking" && (
+          <>
+            <div className="grid gap-4 md:grid-cols-3">
+              <StatCard label="Tổng lịch hẹn" value={String(appointmentStats.total)} icon={CalendarDays} />
+              <StatCard label="Chờ xác nhận" value={String(appointmentStats.pending)} icon={CalendarDays} tone="warning" />
+              <StatCard label="Đã xác nhận" value={String(appointmentStats.confirmed)} icon={CalendarDays} tone="success" />
             </div>
-          )}
-
-          {section === "booking" && (
-            <>
-              <div className="grid gap-4 md:grid-cols-3">
-                <StatCard label="Tổng lịch hẹn" value={String(appointmentStats.total)} icon={CalendarDays} />
-                <StatCard label="Chờ xác nhận" value={String(appointmentStats.pending)} icon={CalendarDays} tone="warning" />
-                <StatCard label="Đã xác nhận" value={String(appointmentStats.confirmed)} icon={CalendarDays} tone="success" />
-              </div>
-              <PageSection
-                title="Đăng ký lịch khám của bệnh nhân"
-                description={role === "admin" ? "Admin có thể mở ngay trang lịch hẹn đầy đủ để tạo mới." : "Bác sĩ xem nhanh tình hình đặt lịch hiện tại."}
-                actions={
+            <Card className="border-slate-200">
+              <CardContent className="pt-6">
+                <div className="mb-4 flex justify-end">
                   <Button variant="outline" size="sm" onClick={() => void navigate({ to: "/app/appointments" })}>
                     Mở trang lịch hẹn <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
-                }
-              >
+                </div>
                 <QueryState
                   isLoading={appointmentsQuery.isLoading}
                   error={appointmentsQuery.error}
@@ -560,33 +760,34 @@ function ScheduleManagementPage() {
                           <TableCell>{appointment.patientName}</TableCell>
                           <TableCell>{appointment.dentistName || "Chưa phân công"}</TableCell>
                           <TableCell>{appointment.appointmentType}</TableCell>
-                          <TableCell><StatusBadge value={appointment.status} /></TableCell>
+                          <TableCell>
+                            <StatusBadge value={appointment.status} />
+                          </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
                   </Table>
                 </QueryState>
-              </PageSection>
-            </>
-          )}
+              </CardContent>
+            </Card>
+          </>
+        )}
 
-          {section === "tracking" && (
-            <>
-              <div className="grid gap-4 md:grid-cols-4">
-                <StatCard label="Tổng lịch" value={String(appointmentStats.total)} icon={ClipboardList} />
-                <StatCard label="Pending" value={String(appointmentStats.pending)} icon={ClipboardList} tone="warning" />
-                <StatCard label="Confirmed" value={String(appointmentStats.confirmed)} icon={ClipboardList} tone="success" />
-                <StatCard label="Completed" value={String(appointmentStats.completed)} icon={ClipboardList} />
-              </div>
-              <PageSection
-                title="Theo dõi lịch khám"
-                description="Bảng này giúp rà nhanh lịch chờ xác nhận, đang xử lý và đã hoàn tất."
-                actions={
+        {section === "tracking" && (
+          <>
+            <div className="grid gap-4 md:grid-cols-4">
+              <StatCard label="Tổng lịch" value={String(appointmentStats.total)} icon={ClipboardList} />
+              <StatCard label="Pending" value={String(appointmentStats.pending)} icon={ClipboardList} tone="warning" />
+              <StatCard label="Confirmed" value={String(appointmentStats.confirmed)} icon={ClipboardList} tone="success" />
+              <StatCard label="Completed" value={String(appointmentStats.completed)} icon={ClipboardList} />
+            </div>
+            <Card className="border-slate-200">
+              <CardContent className="pt-6">
+                <div className="mb-4 flex justify-end">
                   <Button variant="outline" size="sm" onClick={() => void navigate({ to: "/app/appointments" })}>
                     Xử lý tại trang lịch hẹn <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
-                }
-              >
+                </div>
                 <QueryState
                   isLoading={appointmentsQuery.isLoading}
                   error={appointmentsQuery.error}
@@ -600,8 +801,8 @@ function ScheduleManagementPage() {
                     <TableHeader>
                       <TableRow>
                         <TableHead>Bệnh nhân</TableHead>
-                        <TableHead>Thời gian</TableHead>
                         <TableHead>Bác sĩ</TableHead>
+                        <TableHead>Thời gian</TableHead>
                         <TableHead>Trạng thái</TableHead>
                         <TableHead>Ghi chú</TableHead>
                       </TableRow>
@@ -610,68 +811,63 @@ function ScheduleManagementPage() {
                       {recentAppointments.map((appointment) => (
                         <TableRow key={appointment.id}>
                           <TableCell>{appointment.patientName}</TableCell>
-                          <TableCell>{formatDateTime(appointment.appointmentDate)}</TableCell>
                           <TableCell>{appointment.dentistName || "Chưa phân công"}</TableCell>
-                          <TableCell><StatusBadge value={appointment.status} /></TableCell>
+                          <TableCell>{formatDateTime(appointment.appointmentDate)}</TableCell>
+                          <TableCell>
+                            <StatusBadge value={appointment.status} />
+                          </TableCell>
                           <TableCell>{appointment.notes || "Không có"}</TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
                   </Table>
                 </QueryState>
-              </PageSection>
-            </>
-          )}
+              </CardContent>
+            </Card>
+          </>
+        )}
 
-          {section === "patients" && (
-            <PageSection
-              title="Quản lý bệnh nhân"
-              description="Hiển thị nhanh bệnh nhân hiện có và mở sang trang quản lý đầy đủ khi cần."
-              actions={
+        {section === "patients" && (
+          <Card className="border-slate-200">
+            <CardContent className="pt-6">
+              <div className="mb-4 flex justify-end">
                 <Button variant="outline" size="sm" onClick={() => void navigate({ to: "/app/patients" })}>
                   Mở trang bệnh nhân <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
-              }
-            >
+              </div>
               <QueryState
                 isLoading={patientsQuery.isLoading}
                 error={patientsQuery.error}
                 isEmpty={recentPatients.length === 0}
                 emptyIcon={UserRound}
                 emptyTitle="Chưa có bệnh nhân"
-                emptyDescription="Dữ liệu bệnh nhân sẽ hiển thị ở đây."
+                emptyDescription="Danh sách bệnh nhân sẽ hiển thị tại đây."
                 onRetry={() => patientsQuery.refetch()}
               >
                 <Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead>Họ tên</TableHead>
-                      <TableHead>Liên hệ</TableHead>
-                      <TableHead>Ngày sinh</TableHead>
+                      <TableHead>Giới tính</TableHead>
+                      <TableHead>Số điện thoại</TableHead>
                       <TableHead>Trạng thái</TableHead>
-                      <TableHead className="text-right">Mở</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {recentPatients.map((patient) => (
+                    {recentPatients.map((patient: Patient) => (
                       <TableRow key={patient.id}>
                         <TableCell className="font-medium">{patient.name}</TableCell>
-                        <TableCell>{patient.phone}</TableCell>
-                        <TableCell>{formatDate(patient.dob)}</TableCell>
-                        <TableCell><StatusBadge value={patient.active} /></TableCell>
-                        <TableCell className="text-right">
-                          <Button variant="outline" size="sm" onClick={() => void navigate({ to: "/app/patients" })}>
-                            <Eye className="mr-2 h-4 w-4" /> Xem
-                          </Button>
-                        </TableCell>
+                        <TableCell>{patient.gender || "Không có"}</TableCell>
+                        <TableCell>{patient.phone || "Không có"}</TableCell>
+                        <TableCell>{patient.active ? "Đang hoạt động" : "Ngừng hoạt động"}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
                 </Table>
               </QueryState>
-            </PageSection>
-          )}
-        </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       {can("holidays.write") && (
@@ -687,7 +883,9 @@ function ScheduleManagementPage() {
           initialValues={toHolidayValues(editingHoliday || undefined)}
           submitLabel={editingHoliday ? "Lưu thay đổi" : "Tạo ngày nghỉ"}
           pending={holidaySaveMutation.isPending}
-          onSubmit={async (values) => holidaySaveMutation.mutateAsync(values)}
+          onSubmit={async (values) => {
+            await holidaySaveMutation.mutateAsync(values);
+          }}
         />
       )}
 
@@ -721,7 +919,9 @@ function ScheduleManagementPage() {
           initialValues={toShiftValues(editingShift || undefined)}
           submitLabel={editingShift ? "Lưu thay đổi" : "Tạo ca"}
           pending={shiftSaveMutation.isPending}
-          onSubmit={async (values) => shiftSaveMutation.mutateAsync(values)}
+          onSubmit={async (values) => {
+            await shiftSaveMutation.mutateAsync(values);
+          }}
         />
       )}
 
@@ -737,6 +937,47 @@ function ScheduleManagementPage() {
           onConfirm={async () => {
             if (deleteShift) {
               await shiftDeleteMutation.mutateAsync(deleteShift.id);
+            }
+          }}
+        />
+      )}
+
+      {can("duties.create") && (
+        <CrudFormDialog
+          open={dutyFormOpen}
+          onOpenChange={(open) => {
+            setDutyFormOpen(open);
+            if (!open) {
+              setEditingDuty(null);
+              setDutyFormValues(toDutyValues());
+            }
+          }}
+          title={editingDuty ? "Cập nhật lịch trực" : "Thêm lịch trực"}
+          description="Lịch trực xác định bác sĩ chịu trách nhiệm chính trong ngày, và bác sĩ đó phải có ca làm việc."
+          fields={buildDutyFields(eligibleDutyDentists, Boolean(dutyFormValues.dutyDate))}
+          initialValues={toDutyValues(editingDuty || undefined)}
+          values={dutyFormValues}
+          onValuesChange={setDutyFormValues}
+          submitLabel={editingDuty ? "Lưu thay đổi" : "Tạo lịch trực"}
+          pending={dutySaveMutation.isPending}
+          onSubmit={async (values) => {
+            await dutySaveMutation.mutateAsync(values);
+          }}
+        />
+      )}
+
+      {can("duties.delete") && (
+        <ConfirmActionDialog
+          open={Boolean(deleteDuty)}
+          onOpenChange={(open) => !open && setDeleteDuty(null)}
+          title="Xóa lịch trực"
+          description={`Bạn có chắc muốn xóa lịch trực của "${deleteDuty?.dentistName}" không?`}
+          actionLabel="Xóa"
+          variant="destructive"
+          pending={dutyDeleteMutation.isPending}
+          onConfirm={async () => {
+            if (deleteDuty) {
+              await dutyDeleteMutation.mutateAsync(deleteDuty.id);
             }
           }}
         />

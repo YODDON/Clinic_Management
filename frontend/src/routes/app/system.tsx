@@ -1,7 +1,7 @@
 import type { ComponentType } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import {
   BadgeDollarSign,
   Briefcase,
@@ -25,7 +25,7 @@ import { QueryState } from "@/components/common/QueryState";
 import { StatusBadge } from "@/components/common/StatusBadge";
 import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -232,38 +232,38 @@ function isManagedUser(user: SystemUser) {
 }
 
 export const Route = createFileRoute("/app/system")({
+  validateSearch: (search: Record<string, unknown>) => {
+    const section =
+      typeof search.section === "string" &&
+      ["users", "dentists", "services", "pricing"].includes(search.section)
+        ? (search.section as SystemSection)
+        : "users";
+
+    return { section };
+  },
   component: SystemManagementPage,
   head: () => ({ meta: [{ title: "Quản lý hệ thống | DentalPro" }] }),
 });
 
 function SystemManagementPage() {
-  const [section, setSection] = useState<SystemSection>("users");
+  const search = Route.useSearch();
+  const navigate = useNavigate();
+  const section = search.section;
+  const selectedSection = sections.find((item) => item.id === section) || sections[0];
+  const setSection = (nextSection: SystemSection) => {
+    void navigate({ to: "/app/system", search: { section: nextSection } });
+  };
 
   return (
     <AppShell title="Quản lý hệ thống" allowedRoles={["admin"]}>
-      <div className="grid gap-6 lg:grid-cols-[240px_minmax(0,1fr)]">
-        <Card className="h-fit">
-          <CardHeader className="pb-3">
+      <div className="space-y-6">
+        <Card className="border-slate-200 bg-[radial-gradient(circle_at_top_left,#eff8ff_0,#ffffff_55%,#f8fafc_100%)]">
+          <CardHeader>
             <CardTitle className="text-base">Chức năng</CardTitle>
+            <CardDescription className="text-base">
+              Chọn chức năng từ menu xổ xuống ở thanh bên trái để chuyển nhanh giữa các phần quản trị.
+            </CardDescription>
           </CardHeader>
-          <CardContent className="grid gap-2">
-            {sections.map((item) => {
-              const Icon = item.icon;
-              const active = item.id === section;
-
-              return (
-                <Button
-                  key={item.id}
-                  variant={active ? "default" : "outline"}
-                  className="justify-start"
-                  onClick={() => setSection(item.id)}
-                >
-                  <Icon className="mr-2 h-4 w-4" />
-                  {item.label}
-                </Button>
-              );
-            })}
-          </CardContent>
         </Card>
 
         <div className="min-w-0">

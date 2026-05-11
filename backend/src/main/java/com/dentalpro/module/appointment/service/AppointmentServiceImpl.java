@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.temporal.ChronoField;
@@ -32,6 +33,8 @@ public class AppointmentServiceImpl implements AppointmentService {
         .appendFraction(ChronoField.NANO_OF_SECOND, 0, 9, true)
         .optionalEnd()
         .toFormatter();
+    private static final LocalTime LUNCH_BREAK_START = LocalTime.of(12, 0);
+    private static final LocalTime LUNCH_BREAK_END = LocalTime.of(13, 30);
 
     private final AppointmentRepository appointmentRepository;
     private final UserRepository userRepository;
@@ -130,13 +133,21 @@ public class AppointmentServiceImpl implements AppointmentService {
     }
 
     private void validateHolidayDate(String appointmentDate) {
-        LocalDate targetDate = parseAppointmentDate(appointmentDate).toLocalDate();
+        LocalDateTime targetDateTime = parseAppointmentDate(appointmentDate);
+        LocalDate targetDate = targetDateTime.toLocalDate();
         if (clinicHolidayService.isHoliday(targetDate)) {
             throw new BadRequestException("Appointments cannot be created or moved to a clinic holiday");
+        }
+        if (isDuringLunchBreak(targetDateTime.toLocalTime())) {
+            throw new BadRequestException("Phòng khám nghỉ trưa từ 12:00 đến 13:30. Vui lòng chọn khung giờ khác.");
         }
     }
 
     private LocalDateTime parseAppointmentDate(String appointmentDate) {
         return LocalDateTime.parse(appointmentDate, APPOINTMENT_DATE_FORMATTER);
+    }
+
+    private boolean isDuringLunchBreak(LocalTime time) {
+        return !time.isBefore(LUNCH_BREAK_START) && time.isBefore(LUNCH_BREAK_END);
     }
 }

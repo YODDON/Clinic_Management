@@ -273,6 +273,21 @@ export type DentistShiftPayload = {
   notes?: string | null;
 };
 
+export type DentistDuty = {
+  id: string;
+  dutyDate: string;
+  dentistId: string;
+  dentistName: string;
+  specialization: string | null;
+  notes: string | null;
+};
+
+export type DentistDutyPayload = {
+  dutyDate?: string;
+  dentistId?: string;
+  notes?: string | null;
+};
+
 export type InventoryItem = {
   id: string;
   code: string;

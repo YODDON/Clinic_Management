@@ -28,6 +28,8 @@ import java.util.UUID;
 @Service
 public class PortalServiceImpl implements PortalService {
     private static final DateTimeFormatter SLOT_FORMAT = DateTimeFormatter.ofPattern("HH:mm");
+    private static final LocalTime LUNCH_BREAK_START = LocalTime.of(12, 0);
+    private static final LocalTime LUNCH_BREAK_END = LocalTime.of(13, 30);
 
     private final PortalRepository portalRepository;
     private final ClinicHolidayService clinicHolidayService;
@@ -67,7 +69,7 @@ public class PortalServiceImpl implements PortalService {
             LocalTime start = LocalTime.parse(parts[0]);
             LocalTime end = LocalTime.parse(parts[1]);
             while (start.isBefore(end)) {
-                if (!targetDate.equals(today) || start.isAfter(now)) {
+                if (isBookableSlot(start) && (!targetDate.equals(today) || start.isAfter(now))) {
                     slots.add(start.format(SLOT_FORMAT));
                 }
                 start = start.plusMinutes(30);
@@ -102,6 +104,9 @@ public class PortalServiceImpl implements PortalService {
         }
         if (clinicHolidayService.isHoliday(appointmentDate.toLocalDate())) {
             throw new BadRequestException("Phòng khám nghỉ trong ngày này. Vui lòng chọn ngày khác.");
+        }
+        if (isDuringLunchBreak(appointmentDate.toLocalTime())) {
+            throw new BadRequestException("Phòng khám nghỉ trưa từ 12:00 đến 13:30. Vui lòng chọn khung giờ khác.");
         }
 
         String slot = appointmentDate.toLocalTime().format(SLOT_FORMAT);
@@ -158,5 +163,13 @@ public class PortalServiceImpl implements PortalService {
             throw new ResourceNotFoundException("Customer profile not found");
         }
         return profile;
+    }
+
+    private boolean isBookableSlot(LocalTime time) {
+        return !isDuringLunchBreak(time);
+    }
+
+    private boolean isDuringLunchBreak(LocalTime time) {
+        return !time.isBefore(LUNCH_BREAK_START) && time.isBefore(LUNCH_BREAK_END);
     }
 }

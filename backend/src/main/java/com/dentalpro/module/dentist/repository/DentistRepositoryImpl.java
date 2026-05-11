@@ -94,8 +94,9 @@ public class DentistRepositoryImpl implements DentistRepository {
             SELECT
                 (SELECT COUNT(*) FROM appointments WHERE dentist_id = ?) +
                 (SELECT COUNT(*) FROM dentist_shifts WHERE dentist_id = ?) +
-                (SELECT COUNT(*) FROM treatment_records WHERE dentist_id = ?) AS total_refs
-            """, Integer.class, id, id, id);
+                (SELECT COUNT(*) FROM treatment_records WHERE dentist_id = ?) +
+                (SELECT COUNT(*) FROM dentist_duties WHERE dentist_id = ?) AS total_refs
+            """, Integer.class, id, id, id, id);
         return value == null ? 0 : value;
     }
 

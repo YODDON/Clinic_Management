@@ -41,6 +41,10 @@ export type PermissionKey =
   | "shifts.create"
   | "shifts.update"
   | "shifts.delete"
+  | "duties.read"
+  | "duties.create"
+  | "duties.update"
+  | "duties.delete"
   | "inventory.read"
   | "inventory.write"
   | "inventory.adjust"
@@ -100,6 +104,10 @@ export const permissionAccess: AccessMap<PermissionKey> = {
   "shifts.create": ["admin"],
   "shifts.update": ["admin"],
   "shifts.delete": ["admin"],
+  "duties.read": ["admin", "dentist"],
+  "duties.create": ["admin"],
+  "duties.update": ["admin"],
+  "duties.delete": ["admin"],
   "inventory.read": ["admin", "dentist"],
   "inventory.write": ["admin"],
   "inventory.adjust": ["admin"],
