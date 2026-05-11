@@ -1,17 +1,17 @@
 import { useEffect, useState } from "react";
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Eye, EyeOff, Loader2, Stethoscope } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
+import { Eye, EyeOff, Loader2, Stethoscope } from "lucide-react";
 import { toast } from "sonner";
 
-import { authApi } from "@/lib/api";
-import { getDefaultRouteForRole, normalizeRole } from "@/lib/rbac";
-import { setSession } from "@/lib/session";
-import { useSession } from "@/hooks/use-session";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useSession } from "@/hooks/use-session";
+import { authApi } from "@/lib/api";
+import { getDefaultRouteForRole, normalizeRole } from "@/lib/rbac";
+import { setSession } from "@/lib/session";
 
 export const Route = createFileRoute("/login")({
   component: LoginPage,
@@ -63,9 +63,6 @@ function LoginPage() {
         <Card className="shadow-[0_18px_60px_-24px_rgba(13,148,136,0.32)]">
           <CardContent className="p-7">
             <h1 className="text-2xl font-bold">Đăng nhập</h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Chào mừng bạn quay lại. Customer sẽ vào portal `/my`, còn staff vào dashboard `/app`.
-            </p>
 
             <form onSubmit={onSubmit} className="mt-6 space-y-4">
               <div className="space-y-2">
@@ -73,7 +70,6 @@ function LoginPage() {
                 <Input
                   id="email"
                   type="email"
-                  placeholder="ban@email.com"
                   autoComplete="email"
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
@@ -81,21 +77,11 @@ function LoginPage() {
               </div>
 
               <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="password">Mật khẩu</Label>
-                  <button
-                    type="button"
-                    className="text-xs text-muted-foreground opacity-60"
-                    title="Tính năng sẽ bổ sung sau"
-                  >
-                    Quên mật khẩu?
-                  </button>
-                </div>
+                <Label htmlFor="password">Mật khẩu</Label>
                 <div className="relative">
                   <Input
                     id="password"
                     type={showPwd ? "text" : "password"}
-                    placeholder="••••••••"
                     autoComplete="current-password"
                     value={password}
                     onChange={(event) => setPassword(event.target.value)}

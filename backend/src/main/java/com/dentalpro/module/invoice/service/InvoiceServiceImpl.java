@@ -245,7 +245,7 @@ public class InvoiceServiceImpl implements InvoiceService {
     private Map<String, Object> resolveAccount(String email) {
         List<Map<String, Object>> rows = userRepository.findAccountRowsByEmail(email, false);
         if (rows.isEmpty()) {
-            throw new ResourceNotFoundException("User not found");
+            throw new ResourceNotFoundException("Không tìm thấy tài khoản");
         }
         return rows.get(0);
     }

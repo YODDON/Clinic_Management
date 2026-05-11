@@ -43,10 +43,7 @@ export function PublicNavbar() {
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
             <Stethoscope className="h-5 w-5" />
           </div>
-          <div className="leading-tight">
-            <p className="text-base font-bold">DentalPro</p>
-            <p className="text-[10px] text-muted-foreground">Phòng khám nha khoa</p>
-          </div>
+          <p className="text-base font-bold">DentalPro</p>
         </Link>
 
         <nav className="hidden items-center gap-7 md:flex">
@@ -101,8 +98,10 @@ export function PublicNavbar() {
                 )}
                 {role && role !== "customer" && (
                   <>
-                    <DropdownMenuItem onClick={() => void navigate({ to: getDefaultRouteForRole(role) as never })}>
-                      <Stethoscope className="h-4 w-4" /> Vào dashboard nội bộ
+                    <DropdownMenuItem
+                      onClick={() => void navigate({ to: getDefaultRouteForRole(role) as never })}
+                    >
+                      <Stethoscope className="h-4 w-4" /> Trang quản trị
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                   </>
@@ -124,7 +123,12 @@ export function PublicNavbar() {
           )}
         </div>
 
-        <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setOpen((value) => !value)}>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="md:hidden"
+          onClick={() => setOpen((value) => !value)}
+        >
           {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </Button>
       </div>

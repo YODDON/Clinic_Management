@@ -36,10 +36,7 @@ export function StaffDashboardPage() {
   const lowStockItems = lowStockQuery.data || [];
 
   return (
-    <AppShell
-      title="Tong quan"
-      allowedRoles={["admin", "dentist"]}
-    >
+    <AppShell title="Tong quan" allowedRoles={["admin", "dentist"]}>
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <StatCard
           label="Lich hen hom nay"
@@ -57,7 +54,7 @@ export function StaffDashboardPage() {
         <StatCard
           label="Doanh thu thang"
           value={formatCurrency(statsQuery.data?.monthlyRevenue ?? 0)}
-          hint="Invoices da paid"
+          hint="Hóa đơn đã thanh toán"
           icon={Receipt}
           tone="warning"
         />
@@ -71,10 +68,7 @@ export function StaffDashboardPage() {
       </div>
 
       <div className="mt-6 grid gap-4 lg:grid-cols-3">
-        <PageSection
-          className="lg:col-span-2"
-          title="Lich hen sap toi"
-        >
+        <PageSection className="lg:col-span-2" title="Lich hen sap toi">
           <QueryState
             isLoading={appointmentsQuery.isLoading}
             error={appointmentsQuery.error}

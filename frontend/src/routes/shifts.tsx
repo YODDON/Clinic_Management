@@ -101,7 +101,7 @@ export function ShiftsPage() {
   const dentistOptions =
     dentistsQuery.data ||
     (shiftsQuery.data || [])
-      .map((shift) => ({ id: shift.dentistId, name: shift.dentistName } as Dentist))
+      .map((shift) => ({ id: shift.dentistId, name: shift.dentistName }) as Dentist)
       .filter(
         (dentist, index, dentists) =>
           dentists.findIndex((item) => item.id === dentist.id) === index,

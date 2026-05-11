@@ -19,7 +19,7 @@ public class ReportController {
 
     @GetMapping("/stats")
     public ApiResponse<DashboardStatsDto> getStats() {
-        return ApiResponse.ok("Dashboard stats fetched", reportService.getDashboardStats());
+        return ApiResponse.ok("Lấy số liệu tổng quan thành công", reportService.getDashboardStats());
     }
 }
 

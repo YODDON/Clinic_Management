@@ -28,34 +28,34 @@ public class AuthController {
 
     @PostMapping("/register")
     public ApiResponse<LoginResponse> register(@Valid @RequestBody RegisterRequest request) {
-        return ApiResponse.ok("Register successful", authService.register(request));
+        return ApiResponse.ok("Đăng ký thành công", authService.register(request));
     }
 
     @PostMapping("/login")
     public ApiResponse<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
-        return ApiResponse.ok("Login successful", authService.login(request));
+        return ApiResponse.ok("Đăng nhập thành công", authService.login(request));
     }
 
     @GetMapping("/me")
     public ApiResponse<AuthUserDto> me(Authentication authentication) {
-        return ApiResponse.ok("Current user fetched", authService.me(authentication.getName()));
+        return ApiResponse.ok("Lấy thông tin tài khoản thành công", authService.me(authentication.getName()));
     }
 
     @PostMapping("/logout")
     public ApiResponse<Void> logout(Authentication authentication) {
         authService.logout(authentication.getName());
-        return ApiResponse.ok("Logout successful", null);
+        return ApiResponse.ok("Đăng xuất thành công", null);
     }
 
     @PostMapping("/forgot-password")
     public ApiResponse<Void> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
         authService.forgotPassword(request);
-        return ApiResponse.ok("Reset request accepted", null);
+        return ApiResponse.ok("Đã tiếp nhận yêu cầu đặt lại mật khẩu", null);
     }
 
     @PostMapping("/change-password")
     public ApiResponse<Void> changePassword(Authentication authentication, @Valid @RequestBody ChangePasswordRequest request) {
         authService.changePassword(authentication.getName(), request);
-        return ApiResponse.ok("Password changed", null);
+        return ApiResponse.ok("Đổi mật khẩu thành công", null);
     }
 }

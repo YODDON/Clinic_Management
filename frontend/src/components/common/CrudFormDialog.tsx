@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -55,7 +54,6 @@ export function CrudFormDialog({
   open,
   onOpenChange,
   title,
-  description,
   fields,
   initialValues,
   values: controlledValues,
@@ -151,7 +149,6 @@ export function CrudFormDialog({
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
-          {description && <DialogDescription>{description}</DialogDescription>}
         </DialogHeader>
         <form
           className="grid gap-4"
@@ -189,7 +186,6 @@ export function CrudFormDialog({
                     <Textarea
                       id={field.name}
                       value={resolvedValues[field.name] ?? ""}
-                      placeholder={field.placeholder}
                       required={field.required}
                       aria-invalid={Boolean(error)}
                       className={cn(error && "border-destructive focus-visible:ring-destructive")}
@@ -205,9 +201,7 @@ export function CrudFormDialog({
                         aria-invalid={Boolean(error)}
                         className={cn(error && "border-destructive focus:ring-destructive")}
                       >
-                        <SelectValue
-                          placeholder={field.placeholder || `Chọn ${field.label.toLowerCase()}`}
-                        />
+                        <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
                         {(field.options || []).map((option) => (
@@ -222,18 +216,13 @@ export function CrudFormDialog({
                       id={field.name}
                       type={field.type || "text"}
                       value={resolvedValues[field.name] ?? ""}
-                      placeholder={field.placeholder}
                       required={field.required}
                       aria-invalid={Boolean(error)}
                       className={cn(error && "border-destructive focus-visible:ring-destructive")}
                       onChange={(event) => setValue(field.name, event.target.value)}
                     />
                   )}
-                  {error ? (
-                    <p className="text-sm font-medium text-destructive">{error}</p>
-                  ) : field.description ? (
-                    <p className="text-sm text-muted-foreground">{field.description}</p>
-                  ) : null}
+                  {error ? <p className="text-sm font-medium text-destructive">{error}</p> : null}
                 </div>
               );
             })}

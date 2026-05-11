@@ -20,27 +20,27 @@ public class DentistDutyController {
 
     @GetMapping
     public ApiResponse<PageResponse<DentistDutyDto>> getDuties() {
-        return ApiResponse.ok("Duty schedules fetched", dentistDutyService.getDuties());
+        return ApiResponse.ok("Lấy danh sách lịch trực thành công", dentistDutyService.getDuties());
     }
 
     @GetMapping("/{id}")
     public ApiResponse<DentistDutyDto> getDuty(@PathVariable String id) {
-        return ApiResponse.ok("Duty schedule fetched", dentistDutyService.getDuty(id));
+        return ApiResponse.ok("Lấy thông tin lịch trực thành công", dentistDutyService.getDuty(id));
     }
 
     @PostMapping
     public ApiResponse<DentistDutyDto> create(@Valid @RequestBody CreateDentistDutyRequest request) {
-        return ApiResponse.ok("Duty schedule created", dentistDutyService.create(request));
+        return ApiResponse.ok("Tạo lịch trực thành công", dentistDutyService.create(request));
     }
 
     @PatchMapping("/{id}")
     public ApiResponse<DentistDutyDto> update(@PathVariable String id, @RequestBody UpdateDentistDutyRequest request) {
-        return ApiResponse.ok("Duty schedule updated", dentistDutyService.update(id, request));
+        return ApiResponse.ok("Cập nhật lịch trực thành công", dentistDutyService.update(id, request));
     }
 
     @DeleteMapping("/{id}")
     public ApiResponse<Void> delete(@PathVariable String id) {
         dentistDutyService.delete(id);
-        return ApiResponse.ok("Duty schedule deleted", null);
+        return ApiResponse.ok("Xóa lịch trực thành công", null);
     }
 }

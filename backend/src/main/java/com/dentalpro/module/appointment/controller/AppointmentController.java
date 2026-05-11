@@ -22,28 +22,28 @@ public class AppointmentController {
 
     @GetMapping
     public ApiResponse<PageResponse<AppointmentDto>> getAppointments(Authentication authentication) {
-        return ApiResponse.ok("Appointments fetched", appointmentService.getAppointments(authentication.getName()));
+        return ApiResponse.ok("Lấy danh sách lịch hẹn thành công", appointmentService.getAppointments(authentication.getName()));
     }
 
     @GetMapping("/{id}")
     public ApiResponse<AppointmentDto> getAppointment(Authentication authentication, @PathVariable String id) {
-        return ApiResponse.ok("Appointment fetched", appointmentService.getAppointment(authentication.getName(), id));
+        return ApiResponse.ok("Lấy thông tin lịch hẹn thành công", appointmentService.getAppointment(authentication.getName(), id));
     }
 
     @PostMapping
     public ApiResponse<AppointmentDto> create(Authentication authentication, @Valid @RequestBody CreateAppointmentRequest request) {
-        return ApiResponse.ok("Appointment created", appointmentService.create(authentication.getName(), request));
+        return ApiResponse.ok("Tạo lịch hẹn thành công", appointmentService.create(authentication.getName(), request));
     }
 
     @PatchMapping("/{id}")
     public ApiResponse<AppointmentDto> update(Authentication authentication, @PathVariable String id, @Valid @RequestBody UpdateAppointmentRequest request) {
-        return ApiResponse.ok("Appointment updated", appointmentService.update(authentication.getName(), id, request));
+        return ApiResponse.ok("Cập nhật lịch hẹn thành công", appointmentService.update(authentication.getName(), id, request));
     }
 
     @DeleteMapping("/{id}")
     public ApiResponse<Void> delete(Authentication authentication, @PathVariable String id) {
         appointmentService.delete(authentication.getName(), id);
-        return ApiResponse.ok("Appointment deleted", null);
+        return ApiResponse.ok("Xóa lịch hẹn thành công", null);
     }
 }
 

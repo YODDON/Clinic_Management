@@ -37,7 +37,7 @@ public class DentistDutyServiceImpl implements DentistDutyService {
     public DentistDutyDto getDuty(String id) {
         List<DentistDutyDto> items = dentistDutyRepository.findById(id);
         if (items.isEmpty()) {
-            throw new ResourceNotFoundException("Duty schedule not found");
+            throw new ResourceNotFoundException("Không tìm thấy lịch trực");
         }
         return items.get(0);
     }

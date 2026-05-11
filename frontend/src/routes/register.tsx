@@ -1,17 +1,17 @@
 import { useEffect, useState } from "react";
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Eye, EyeOff, Loader2, Stethoscope } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
+import { Eye, EyeOff, Loader2, Stethoscope } from "lucide-react";
 import { toast } from "sonner";
 
-import { authApi } from "@/lib/api";
-import { getDefaultRouteForRole, normalizeRole } from "@/lib/rbac";
-import { setSession } from "@/lib/session";
-import { useSession } from "@/hooks/use-session";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useSession } from "@/hooks/use-session";
+import { authApi } from "@/lib/api";
+import { getDefaultRouteForRole, normalizeRole } from "@/lib/rbac";
+import { setSession } from "@/lib/session";
 
 export const Route = createFileRoute("/register")({
   component: RegisterPage,
@@ -76,22 +76,28 @@ function RegisterPage() {
         <Card className="shadow-[0_18px_60px_-24px_rgba(13,148,136,0.32)]">
           <CardContent className="p-7">
             <h1 className="text-2xl font-bold">Tạo tài khoản</h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Đăng ký miễn phí để đặt lịch và quản lý hồ sơ răng miệng. Sau khi đăng ký hệ thống sẽ tự tạo luôn patient profile liên kết với user customer.
-            </p>
 
             <form onSubmit={onSubmit} className="mt-6 space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="name">Họ và tên</Label>
-                <Input id="name" placeholder="Nguyễn Văn A" value={name} onChange={(event) => setName(event.target.value)} />
+                <Input id="name" value={name} onChange={(event) => setName(event.target.value)} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" placeholder="ban@email.com" value={email} onChange={(event) => setEmail(event.target.value)} />
+                <Input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="phone">Số điện thoại</Label>
-                <Input id="phone" placeholder="0901234567" value={phone} onChange={(event) => setPhone(event.target.value)} />
+                <Input
+                  id="phone"
+                  value={phone}
+                  onChange={(event) => setPhone(event.target.value)}
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="password">Mật khẩu</Label>
@@ -99,7 +105,6 @@ function RegisterPage() {
                   <Input
                     id="password"
                     type={showPwd ? "text" : "password"}
-                    placeholder="••••••••"
                     value={password}
                     onChange={(event) => setPassword(event.target.value)}
                   />
@@ -111,14 +116,12 @@ function RegisterPage() {
                     {showPwd ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
-                <p className="text-xs text-muted-foreground">Tối thiểu 8 ký tự, có chữ hoa và chữ số.</p>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="confirmPassword">Xác nhận mật khẩu</Label>
                 <Input
                   id="confirmPassword"
                   type={showPwd ? "text" : "password"}
-                  placeholder="••••••••"
                   value={confirmPassword}
                   onChange={(event) => setConfirmPassword(event.target.value)}
                 />

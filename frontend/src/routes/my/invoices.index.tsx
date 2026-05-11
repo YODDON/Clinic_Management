@@ -65,7 +65,9 @@ function InvoiceCard({ invoice }: { invoice: Invoice }) {
           </div>
           <div className="text-right">
             <p className="text-xs uppercase tracking-wide text-muted-foreground">Tổng tiền</p>
-            <p className="mt-1 text-xl font-bold text-primary">{formatCurrency(invoice.totalAmount)}</p>
+            <p className="mt-1 text-xl font-bold text-primary">
+              {formatCurrency(invoice.totalAmount)}
+            </p>
           </div>
         </div>
         <div className="mt-4 flex justify-end border-t border-border pt-3">

@@ -62,7 +62,9 @@ function MyInvoiceDetailPage() {
                   <div>
                     <div className="mb-2 flex items-center gap-2">
                       <StatusBadge value={invoice.status} />
-                      <span className="text-xs text-muted-foreground">#{invoice.invoiceNumber}</span>
+                      <span className="text-xs text-muted-foreground">
+                        #{invoice.invoiceNumber}
+                      </span>
                     </div>
                     <h2 className="text-xl font-bold">{invoice.patientName}</h2>
                     <p className="mt-1 text-sm text-muted-foreground">
@@ -71,8 +73,12 @@ function MyInvoiceDetailPage() {
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="text-xs uppercase tracking-wide text-muted-foreground">Tổng tiền</p>
-                    <p className="mt-1 text-2xl font-bold text-primary">{formatCurrency(invoice.totalAmount)}</p>
+                    <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                      Tổng tiền
+                    </p>
+                    <p className="mt-1 text-2xl font-bold text-primary">
+                      {formatCurrency(invoice.totalAmount)}
+                    </p>
                   </div>
                 </div>
               </CardContent>
@@ -97,8 +103,12 @@ function MyInvoiceDetailPage() {
                       <TableRow key={item.id}>
                         <TableCell>{item.description}</TableCell>
                         <TableCell className="text-right">{item.quantity}</TableCell>
-                        <TableCell className="text-right">{formatCurrency(item.unitPrice)}</TableCell>
-                        <TableCell className="text-right font-medium">{formatCurrency(item.totalPrice)}</TableCell>
+                        <TableCell className="text-right">
+                          {formatCurrency(item.unitPrice)}
+                        </TableCell>
+                        <TableCell className="text-right font-medium">
+                          {formatCurrency(item.totalPrice)}
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -122,11 +132,15 @@ function MyInvoiceDetailPage() {
                         <div className="flex items-center justify-between gap-3">
                           <div>
                             <p className="font-semibold">{payment.paymentMethod}</p>
-                            <p className="text-xs text-muted-foreground">{formatDate(payment.paymentDate)}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {formatDate(payment.paymentDate)}
+                            </p>
                           </div>
                           <p className="font-bold text-primary">{formatCurrency(payment.amount)}</p>
                         </div>
-                        {payment.notes && <p className="mt-2 text-xs text-muted-foreground">{payment.notes}</p>}
+                        {payment.notes && (
+                          <p className="mt-2 text-xs text-muted-foreground">{payment.notes}</p>
+                        )}
                       </div>
                     ))}
                   </div>

@@ -192,7 +192,9 @@ export function InvoicesPage() {
   const pendingCount = (invoicesQuery.data || []).filter(
     (invoice) => invoice.status === "pending",
   ).length;
-  const paidCount = (invoicesQuery.data || []).filter((invoice) => invoice.status === "paid").length;
+  const paidCount = (invoicesQuery.data || []).filter(
+    (invoice) => invoice.status === "paid",
+  ).length;
   const overdueCount = (invoicesQuery.data || []).filter(
     (invoice) => invoice.status === "overdue",
   ).length;
@@ -319,7 +321,12 @@ export function InvoicesPage() {
           icon={CircleDollarSign}
           tone="success"
         />
-        <StatCard label="Đã thanh toán" value={String(paidCount)} icon={CheckCircle2} tone="success" />
+        <StatCard
+          label="Đã thanh toán"
+          value={String(paidCount)}
+          icon={CheckCircle2}
+          tone="success"
+        />
         <StatCard label="Chờ thanh toán" value={String(pendingCount)} icon={Clock} tone="warning" />
         <StatCard label="Quá hạn" value={String(overdueCount)} icon={Receipt} tone="destructive" />
       </div>
@@ -447,7 +454,8 @@ export function InvoicesPage() {
             <DialogHeader>
               <DialogTitle>Tạo hóa đơn</DialogTitle>
               <DialogDescription>
-                Chọn bệnh nhân, lịch hẹn liên quan và nhập từng dòng chi phí thực tế. Không cần nhập JSON.
+                Chọn bệnh nhân, lịch hẹn liên quan và nhập từng dòng chi phí thực tế. Không cần nhập
+                JSON.
               </DialogDescription>
             </DialogHeader>
             <form
@@ -493,7 +501,8 @@ export function InvoicesPage() {
                       setInvoiceFormValues((current) => {
                         const hasMatchingAppointment = (appointmentsQuery.data || []).some(
                           (appointment) =>
-                            appointment.id === current.appointmentId && appointment.patientId === value,
+                            appointment.id === current.appointmentId &&
+                            appointment.patientId === value,
                         );
 
                         return {
@@ -598,7 +607,9 @@ export function InvoicesPage() {
                   <Button
                     type="button"
                     variant="outline"
-                    onClick={() => setInvoiceItems((current) => [...current, createEmptyInvoiceItem()])}
+                    onClick={() =>
+                      setInvoiceItems((current) => [...current, createEmptyInvoiceItem()])
+                    }
                   >
                     <Plus className="mr-2 h-4 w-4" /> Thêm dòng
                   </Button>

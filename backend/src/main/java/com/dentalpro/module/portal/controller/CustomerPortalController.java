@@ -40,7 +40,7 @@ public class CustomerPortalController {
 
     @PostMapping("/appointments")
     public ApiResponse<AppointmentDto> createAppointment(Authentication authentication, @Valid @RequestBody CreateCustomerAppointmentRequest request) {
-        return ApiResponse.ok("Appointment created", portalService.createMyAppointment(authentication.getName(), request));
+        return ApiResponse.ok("Tạo lịch hẹn thành công", portalService.createMyAppointment(authentication.getName(), request));
     }
 
     @DeleteMapping("/appointments/{id}")

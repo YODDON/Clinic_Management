@@ -5,7 +5,6 @@ import { Inbox } from "lucide-react";
 export function EmptyState({
   icon: Icon = Inbox,
   title,
-  description,
   action,
 }: {
   icon?: LucideIcon;
@@ -19,7 +18,6 @@ export function EmptyState({
         <Icon className="h-6 w-6" />
       </div>
       <h3 className="text-foreground text-base font-semibold">{title}</h3>
-      {description && <p className="text-muted-foreground mt-1 max-w-sm text-sm">{description}</p>}
       {action && <div className="mt-5">{action}</div>}
     </div>
   );

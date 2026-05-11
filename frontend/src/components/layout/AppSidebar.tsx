@@ -49,7 +49,9 @@ type SystemSubItem = {
 
 const overview: NavItem[] = [{ title: "Tổng quan", url: "/app/", icon: LayoutDashboard }];
 
-const operations: NavItem[] = [{ title: "Hồ sơ điều trị", url: "/app/treatment-records", icon: ClipboardList }];
+const operations: NavItem[] = [
+  { title: "Hồ sơ điều trị", url: "/app/treatment-records", icon: ClipboardList },
+];
 
 const clinic: NavItem[] = [
   { title: "Nha sĩ", url: "/app/dentists", icon: Stethoscope },

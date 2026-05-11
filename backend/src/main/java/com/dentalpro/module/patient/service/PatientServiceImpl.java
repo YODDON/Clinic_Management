@@ -61,7 +61,7 @@ public class PatientServiceImpl implements PatientService {
     @Transactional
     public PatientDto create(CreatePatientRequest request) {
         if (userRepository.emailExists(request.email())) {
-            throw new BadRequestException("Email already exists");
+            throw new BadRequestException("Email đã tồn tại");
         }
 
         String patientId = UUID.randomUUID().toString();
@@ -87,7 +87,7 @@ public class PatientServiceImpl implements PatientService {
     public PatientDto update(String id, UpdatePatientRequest request) {
         String userId = patientRepository.findUserIdById(id);
         if (userRepository.emailExistsForOther(request.email(), userId)) {
-            throw new BadRequestException("Email already exists");
+            throw new BadRequestException("Email đã tồn tại");
         }
 
         userRepository.updateUser(
@@ -150,7 +150,7 @@ public class PatientServiceImpl implements PatientService {
     private Map<String, Object> resolveAccount(String email) {
         List<Map<String, Object>> rows = userRepository.findAccountRowsByEmail(email, false);
         if (rows.isEmpty()) {
-            throw new ResourceNotFoundException("User not found");
+            throw new ResourceNotFoundException("Không tìm thấy tài khoản");
         }
         return rows.get(0);
     }

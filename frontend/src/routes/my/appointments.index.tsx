@@ -4,14 +4,12 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { CalendarPlus, ChevronRight, Clock, Inbox, Stethoscope, X } from "lucide-react";
 import { toast } from "sonner";
 
-import { customerPortalApi } from "@/lib/api";
-import { formatDateTime } from "@/lib/format";
+import { StatusBadge } from "@/components/common/StatusBadge";
 import { CustomerShell } from "@/components/layout/CustomerShell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import { StatusBadge } from "@/components/common/StatusBadge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,6 +20,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { customerPortalApi } from "@/lib/api";
+import { formatDateTime } from "@/lib/format";
 import type { Appointment } from "@/types/api";
 
 export const Route = createFileRoute("/my/appointments/")({
@@ -37,7 +37,7 @@ function MyAppointmentsPage() {
   const cancelMutation = useMutation({
     mutationFn: (id: string) => customerPortalApi.cancelAppointment(id),
     onSuccess: async () => {
-      toast.success("Đã huỷ lịch hẹn");
+      toast.success("Đã hủy lịch hẹn");
       setCancelTarget(null);
       await appointmentsQuery.refetch();
     },
@@ -46,8 +46,12 @@ function MyAppointmentsPage() {
 
   const [cancelTarget, setCancelTarget] = useState<Appointment | null>(null);
   const appointments = appointmentsQuery.data || [];
-  const upcoming = appointments.filter((item) => item.status === "pending" || item.status === "confirmed");
-  const history = appointments.filter((item) => item.status === "completed" || item.status === "cancelled");
+  const upcoming = appointments.filter(
+    (item) => item.status === "pending" || item.status === "confirmed",
+  );
+  const history = appointments.filter(
+    (item) => item.status === "completed" || item.status === "cancelled",
+  );
 
   return (
     <CustomerShell
@@ -80,7 +84,7 @@ function MyAppointmentsPage() {
         <TabsContent value="upcoming" className="mt-5 space-y-4">
           {appointmentsQuery.isLoading && <ListSkeleton />}
           {!appointmentsQuery.isLoading && upcoming.length === 0 && (
-            <EmptyState title="Chưa có lịch hẹn sắp tới" description="Đặt lịch ngay." />
+            <EmptyState title="Chưa có lịch hẹn sắp tới" />
           )}
           {upcoming.map((appointment) => (
             <AppointmentCard
@@ -94,7 +98,7 @@ function MyAppointmentsPage() {
         <TabsContent value="history" className="mt-5 space-y-4">
           {appointmentsQuery.isLoading && <ListSkeleton />}
           {!appointmentsQuery.isLoading && history.length === 0 && (
-            <EmptyState title="Chưa có lịch sử" description="Các lịch đã hoàn thành hoặc huỷ sẽ hiển thị tại đây." />
+            <EmptyState title="Chưa có lịch sử" />
           )}
           {history.map((appointment) => (
             <AppointmentCard key={appointment.id} appointment={appointment} />
@@ -105,9 +109,9 @@ function MyAppointmentsPage() {
       <AlertDialog open={!!cancelTarget} onOpenChange={(open) => !open && setCancelTarget(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Huỷ lịch hẹn?</AlertDialogTitle>
+            <AlertDialogTitle>Hủy lịch hẹn?</AlertDialogTitle>
             <AlertDialogDescription>
-              Lịch hẹn lúc <strong>{cancelTarget ? formatDateTime(cancelTarget.appointmentDate) : ""}</strong> sẽ bị huỷ.
+              <strong>{cancelTarget ? formatDateTime(cancelTarget.appointmentDate) : ""}</strong>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -117,7 +121,7 @@ function MyAppointmentsPage() {
               disabled={cancelMutation.isPending}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Xác nhận huỷ
+              Xác nhận hủy
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -140,9 +144,13 @@ function AppointmentCard({
           <div className="min-w-0 flex-1">
             <div className="mb-2 flex items-center gap-2">
               <StatusBadge value={appointment.status} />
-              <span className="text-xs text-muted-foreground">#{appointment.id.slice(-6).toUpperCase()}</span>
+              <span className="text-xs text-muted-foreground">
+                #{appointment.id.slice(-6).toUpperCase()}
+              </span>
             </div>
-            <p className="text-base font-bold capitalize">{formatDateTime(appointment.appointmentDate)}</p>
+            <p className="text-base font-bold capitalize">
+              {formatDateTime(appointment.appointmentDate)}
+            </p>
             <div className="mt-3 grid gap-2 text-sm sm:grid-cols-2">
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Stethoscope className="h-4 w-4 shrink-0 text-primary" />
@@ -150,7 +158,9 @@ function AppointmentCard({
               </div>
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Clock className="h-4 w-4 shrink-0 text-primary" />
-                <span className="truncate">{appointment.serviceName || appointment.appointmentType}</span>
+                <span className="truncate">
+                  {appointment.serviceName || appointment.appointmentType}
+                </span>
               </div>
             </div>
             {appointment.notes && (
@@ -164,7 +174,7 @@ function AppointmentCard({
         <div className="mt-4 flex flex-wrap items-center justify-end gap-2 border-t border-border pt-3">
           {onCancel && appointment.status === "pending" && (
             <Button variant="outline" size="sm" onClick={onCancel}>
-              <X className="h-4 w-4" /> Huỷ lịch
+              <X className="h-4 w-4" /> Hủy lịch
             </Button>
           )}
           <Button asChild variant="ghost" size="sm">
@@ -178,7 +188,7 @@ function AppointmentCard({
   );
 }
 
-function EmptyState({ title, description }: { title: string; description: string }) {
+function EmptyState({ title }: { title: string }) {
   return (
     <Card>
       <CardContent className="flex flex-col items-center py-14 text-center">
@@ -186,10 +196,9 @@ function EmptyState({ title, description }: { title: string; description: string
           <Inbox className="h-7 w-7" />
         </div>
         <h3 className="text-base font-bold">{title}</h3>
-        <p className="mt-1 max-w-sm text-sm text-muted-foreground">{description}</p>
         <Button asChild className="mt-5">
           <Link to="/my/appointments/new">
-            <CalendarPlus className="h-4 w-4" /> Đặt lịch ngay
+            <CalendarPlus className="h-4 w-4" /> Đặt lịch mới
           </Link>
         </Button>
       </CardContent>

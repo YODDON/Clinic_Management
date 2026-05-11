@@ -125,15 +125,14 @@ export function DetailDialog({ open, onOpenChange, title, description, items }: 
               const longContent = isLongContent(safeValue);
 
               return (
-                <div
-                  key={item.label}
-                  className={cn("space-y-2", longContent && "sm:col-span-2")}
-                >
+                <div key={item.label} className={cn("space-y-2", longContent && "sm:col-span-2")}>
                   <div className="text-[0.95rem] font-semibold text-slate-800">{safeLabel}</div>
                   <div
                     className={cn(
                       "rounded-2xl border border-slate-200 bg-white px-4 text-slate-800 shadow-[0_2px_8px_rgba(15,23,42,0.08),inset_0_1px_0_rgba(255,255,255,0.85)]",
-                      longContent ? "min-h-24 py-3 text-sm leading-6" : "min-h-12 py-2.5 text-lg leading-7",
+                      longContent
+                        ? "min-h-24 py-3 text-sm leading-6"
+                        : "min-h-12 py-2.5 text-lg leading-7",
                     )}
                   >
                     <div className="whitespace-pre-wrap break-words">{safeValue}</div>

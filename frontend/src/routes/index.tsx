@@ -54,10 +54,13 @@ function LandingPage() {
     queryFn: publicApi.dentists,
   });
 
-  const services = servicesQuery.data || [];
-  const dentists = dentistsQuery.data || [];
+  const services = useMemo(() => servicesQuery.data ?? [], [servicesQuery.data]);
+  const dentists = useMemo(() => dentistsQuery.data ?? [], [dentistsQuery.data]);
   const categories = useMemo(
-    () => ["all", ...Array.from(new Set(services.map((service) => service.category).filter(Boolean)))],
+    () => [
+      "all",
+      ...Array.from(new Set(services.map((service) => service.category).filter(Boolean))),
+    ],
     [services],
   );
   const filteredServices =
@@ -92,18 +95,26 @@ function LandingPage() {
         <div className="absolute inset-0 -z-10 bg-gradient-to-br from-accent via-background to-background" />
         <div className="mx-auto grid max-w-6xl gap-10 px-6 py-16 md:grid-cols-2 md:py-24">
           <div className="flex flex-col justify-center">
-            <Badge variant="outline" className="mb-4 w-fit border-primary/30 bg-primary/5 text-primary">
+            <Badge
+              variant="outline"
+              className="mb-4 w-fit border-primary/30 bg-primary/5 text-primary"
+            >
               <Sparkles className="h-3.5 w-3.5" /> Phòng khám nha khoa hàng đầu
             </Badge>
             <h1 className="text-4xl font-bold leading-tight tracking-tight md:text-5xl lg:text-6xl">
               Nụ cười tự tin, <span className="text-primary">khởi đầu từ DentalPro</span>
             </h1>
             <p className="mt-5 max-w-lg text-base text-muted-foreground md:text-lg">
-              Đội ngũ bác sĩ chuyên khoa, công nghệ hiện đại và quy trình chuẩn quốc tế. Customer có thể đặt lịch
-              online trong vài bước, còn staff V1 tiếp nhận và xử lý trên hệ thống nội bộ.
+              Đội ngũ bác sĩ chuyên khoa, công nghệ hiện đại và quy trình chuẩn quốc tế. Customer có
+              thể đặt lịch online trong vài bước, còn staff V1 tiếp nhận và xử lý trên hệ thống nội
+              bộ.
             </p>
             <div className="mt-7 flex flex-wrap gap-3">
-              <Button size="lg" className="shadow-[0_14px_40px_-18px_rgba(13,148,136,0.45)]" onClick={() => handleBooking()}>
+              <Button
+                size="lg"
+                className="shadow-[0_14px_40px_-18px_rgba(13,148,136,0.45)]"
+                onClick={() => handleBooking()}
+              >
                 <Calendar className="h-5 w-5" /> Đặt lịch ngay
               </Button>
               <Button asChild variant="outline" size="lg">
@@ -144,11 +155,26 @@ function LandingPage() {
                 <div className="space-y-3">
                   {[
                     { icon: Shield, title: "Vô trùng tuyệt đối", desc: "Tuân thủ chuẩn Bộ Y tế" },
-                    { icon: Award, title: "Bác sĩ chuyên khoa", desc: "Kinh nghiệm điều trị thực tế" },
-                    { icon: Clock, title: "Đặt lịch linh hoạt", desc: "Online 24/7, xác nhận nhanh" },
-                    { icon: CheckCircle2, title: "Theo dõi rõ ràng", desc: "Dữ liệu V1 và V2 dùng chung" },
+                    {
+                      icon: Award,
+                      title: "Bác sĩ chuyên khoa",
+                      desc: "Kinh nghiệm điều trị thực tế",
+                    },
+                    {
+                      icon: Clock,
+                      title: "Đặt lịch linh hoạt",
+                      desc: "Online 24/7, xác nhận nhanh",
+                    },
+                    {
+                      icon: CheckCircle2,
+                      title: "Theo dõi rõ ràng",
+                      desc: "Dữ liệu V1 và V2 dùng chung",
+                    },
                   ].map((item) => (
-                    <div key={item.title} className="flex items-start gap-3 rounded-lg bg-secondary/60 p-3">
+                    <div
+                      key={item.title}
+                      className="flex items-start gap-3 rounded-lg bg-secondary/60 p-3"
+                    >
                       <item.icon className="mt-0.5 h-5 w-5 text-primary" />
                       <div>
                         <p className="text-sm font-semibold">{item.title}</p>
@@ -196,10 +222,16 @@ function LandingPage() {
                     <Badge variant="secondary" className="text-[10px]">
                       {service.category || "Tổng quát"}
                     </Badge>
-                    <span className="text-xs text-muted-foreground">{service.durationMinutes} phút</span>
+                    <span className="text-xs text-muted-foreground">
+                      {service.durationMinutes} phút
+                    </span>
                   </div>
-                  <h3 className="mb-1 text-lg font-bold group-hover:text-primary">{service.name}</h3>
-                  <p className="mb-4 line-clamp-2 text-sm text-muted-foreground">{service.description}</p>
+                  <h3 className="mb-1 text-lg font-bold group-hover:text-primary">
+                    {service.name}
+                  </h3>
+                  <p className="mb-4 line-clamp-2 text-sm text-muted-foreground">
+                    {service.description}
+                  </p>
                   <div className="flex items-center justify-end border-t border-border pt-3">
                     <Button size="sm" variant="ghost" onClick={() => handleBooking(service.id)}>
                       Đặt lịch <ArrowRight className="h-3.5 w-3.5" />
@@ -237,7 +269,9 @@ function LandingPage() {
                 </div>
                 <CardContent className="p-5">
                   <h3 className="text-base font-bold">{dentist.name}</h3>
-                  <p className="mt-0.5 text-xs font-medium text-primary">{dentist.specialization}</p>
+                  <p className="mt-0.5 text-xs font-medium text-primary">
+                    {dentist.specialization}
+                  </p>
                   <p className="mt-2 line-clamp-2 text-xs text-muted-foreground">{dentist.bio}</p>
                   <div className="mt-3 flex items-center justify-between border-t border-border pt-3 text-xs">
                     <span className="text-muted-foreground">{dentist.yearsExperience} năm KN</span>
@@ -258,7 +292,8 @@ function LandingPage() {
             </Badge>
             <h2 className="text-3xl font-bold md:text-4xl">Ghé thăm phòng khám</h2>
             <p className="mt-2 text-muted-foreground">
-              Customer đặt lịch ở đây, còn điều phối, tiếp nhận, hồ sơ điều trị và hóa đơn tiếp tục được staff xử lý ở V1.
+              Customer đặt lịch ở đây, còn điều phối, tiếp nhận, hồ sơ điều trị và hóa đơn tiếp tục
+              được staff xử lý ở V1.
             </p>
             <div className="mt-6 space-y-4">
               {[
@@ -278,7 +313,11 @@ function LandingPage() {
               ))}
             </div>
             <div className="mt-7 flex gap-3">
-              <Button size="lg" className="shadow-[0_14px_40px_-18px_rgba(13,148,136,0.45)]" onClick={() => handleBooking()}>
+              <Button
+                size="lg"
+                className="shadow-[0_14px_40px_-18px_rgba(13,148,136,0.45)]"
+                onClick={() => handleBooking()}
+              >
                 <Calendar className="h-5 w-5" /> Đặt lịch ngay
               </Button>
             </div>

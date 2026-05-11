@@ -36,7 +36,7 @@ public class UserServiceImpl implements UserService {
     public UserDto getUser(String id) {
         List<UserDto> items = userRepository.findById(id);
         if (items.isEmpty()) {
-            throw new ResourceNotFoundException("User not found");
+            throw new ResourceNotFoundException("Không tìm thấy tài khoản");
         }
         return items.get(0);
     }
@@ -45,7 +45,7 @@ public class UserServiceImpl implements UserService {
     public UserDto create(CreateUserRequest request) {
         validateManagedRole(request.role());
         if (userRepository.emailExists(request.email())) {
-            throw new BadRequestException("Email already exists");
+            throw new BadRequestException("Email đã tồn tại");
         }
         String id = UUID.randomUUID().toString();
         userRepository.insertUser(
@@ -64,7 +64,7 @@ public class UserServiceImpl implements UserService {
         getUser(id);
         validateManagedRole(request.role());
         if (userRepository.emailExistsForOther(request.email(), id)) {
-            throw new BadRequestException("Email already exists");
+            throw new BadRequestException("Email đã tồn tại");
         }
         userRepository.updateUser(
             id,

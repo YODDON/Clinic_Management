@@ -28,7 +28,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { appointmentsApi, dentistsApi, inventoryApi, invoicesApi, patientsApi, treatmentRecordsApi } from "@/lib/api";
+import {
+  appointmentsApi,
+  dentistsApi,
+  inventoryApi,
+  invoicesApi,
+  patientsApi,
+  treatmentRecordsApi,
+} from "@/lib/api";
 import { useRoleAccess } from "@/hooks/use-role-access";
 import { formatDateTime } from "@/lib/format";
 import { queryClient } from "@/lib/query-client";
@@ -68,12 +75,11 @@ function buildRecordFields(
       name: "appointmentId",
       label: "Lịch hẹn",
       type: "select" as const,
-      options: [{ label: "Không gắn lịch hẹn", value: "none" }].concat(
-        appointments.map((appointment) => ({
-          label: `${appointment.patientName} - ${appointment.appointmentDate.slice(0, 16)}`,
-          value: appointment.id,
-        })),
-      ),
+      required: true,
+      options: appointments.map((appointment) => ({
+        label: `${appointment.patientName} - ${appointment.appointmentDate.slice(0, 16)}`,
+        value: appointment.id,
+      })),
     },
     { name: "visitDate", label: "Ngày khám", type: "datetime-local" as const },
     { name: "chiefComplaint", label: "Lý do đến khám", type: "textarea" as const },
@@ -134,7 +140,7 @@ function buildMaterialFields(items: InventoryItem[]) {
 function toRecordValues(record?: TreatmentRecord, fallbackDentistId = "") {
   return {
     patientId: record?.patientId ?? "",
-    appointmentId: record?.appointmentId ?? "none",
+    appointmentId: record?.appointmentId ?? "",
     dentistId: record?.dentistId ?? fallbackDentistId,
     visitDate: record?.visitDate ? record.visitDate.slice(0, 16) : "",
     chiefComplaint: record?.chiefComplaint ?? "",
@@ -150,7 +156,7 @@ function toRecordValues(record?: TreatmentRecord, fallbackDentistId = "") {
 function toRecordPayload(values: Record<string, string>): TreatmentRecordPayload {
   return {
     patientId: values.patientId,
-    appointmentId: values.appointmentId === "none" ? null : values.appointmentId,
+    appointmentId: values.appointmentId,
     dentistId: values.dentistId,
     visitDate: values.visitDate || null,
     chiefComplaint: values.chiefComplaint || null,
@@ -315,7 +321,11 @@ export function TreatmentRecordsPage() {
       toast.success(editingRecord ? "Đã cập nhật hồ sơ điều trị" : "Đã tạo hồ sơ điều trị");
       setFormOpen(false);
       setEditingRecord(null);
-      await refreshRecords();
+      await Promise.all([
+        refreshRecords(),
+        queryClient.invalidateQueries({ queryKey: ["appointments"] }),
+        queryClient.invalidateQueries({ queryKey: ["appointments", "options"] }),
+      ]);
     },
     onError: (error: Error) => toast.error(error.message),
   });
@@ -353,8 +363,13 @@ export function TreatmentRecordsPage() {
   });
 
   const deleteMaterialMutation = useMutation({
-    mutationFn: async ({ record, material }: { record: TreatmentRecord; material: TreatmentMaterial }) =>
-      treatmentRecordsApi.deleteMaterial(record.id, material.id),
+    mutationFn: async ({
+      record,
+      material,
+    }: {
+      record: TreatmentRecord;
+      material: TreatmentMaterial;
+    }) => treatmentRecordsApi.deleteMaterial(record.id, material.id),
     onSuccess: async () => {
       toast.success("Đã xóa vật tư khỏi hồ sơ và hoàn lại tồn kho");
       setDeleteMaterial(null);
@@ -447,82 +462,82 @@ export function TreatmentRecordsPage() {
                     </TableCell>
                     <TableCell>
                       <div className="action-buttons flex justify-end gap-1">
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        aria-label="Xem chi tiết"
-                        title="Xem chi tiết"
-                        onClick={() => setDetailRecord(record)}
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        aria-label="Xem vật tư"
-                        title="Xem vật tư đã dùng"
-                        onClick={() => setMaterialsRecord(record)}
-                      >
-                        <Package className="h-4 w-4" />
-                      </Button>
-                      {can("treatmentRecords.write") && (
                         <Button
                           variant="outline"
                           size="icon"
-                          aria-label="Sửa hồ sơ điều trị"
-                          title="Sửa hồ sơ điều trị"
-                          onClick={() => {
-                            setEditingRecord(record);
-                            setFormOpen(true);
-                          }}
+                          aria-label="Xem chi tiết"
+                          title="Xem chi tiết"
+                          onClick={() => setDetailRecord(record)}
                         >
-                          <Pencil className="h-4 w-4" />
+                          <Eye className="h-4 w-4" />
                         </Button>
-                      )}
-                      {can("treatmentRecords.write") && !invoice && (
                         <Button
                           variant="outline"
                           size="icon"
-                          aria-label="Thêm vật tư"
-                          title="Thêm vật tư"
-                          onClick={() => setMaterialRecord(record)}
+                          aria-label="Xem vật tư"
+                          title="Xem vật tư đã dùng"
+                          onClick={() => setMaterialsRecord(record)}
                         >
                           <Package className="h-4 w-4" />
                         </Button>
-                      )}
-                      {can("invoices.fromTreatment") && !invoice && (
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          aria-label="Tạo hóa đơn"
-                          title="Tạo hóa đơn từ hồ sơ điều trị"
-                          onClick={() => setInvoiceRecord(record)}
-                        >
-                          <Receipt className="h-4 w-4" />
-                        </Button>
-                      )}
-                      {can("invoices.fromTreatment") && invoice && (
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          aria-label="Hồ sơ đã có hóa đơn"
-                          title={`Đã có hóa đơn ${invoice.invoiceNumber}`}
-                          disabled
-                        >
-                          <Receipt className="h-4 w-4" />
-                        </Button>
-                      )}
-                      {can("treatmentRecords.delete") && (
-                        <Button
-                          variant="destructive"
-                          size="icon"
-                          aria-label="Xóa hồ sơ điều trị"
-                          title="Xóa hồ sơ điều trị"
-                          onClick={() => setDeleteRecord(record)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      )}
+                        {can("treatmentRecords.write") && (
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            aria-label="Sửa hồ sơ điều trị"
+                            title="Sửa hồ sơ điều trị"
+                            onClick={() => {
+                              setEditingRecord(record);
+                              setFormOpen(true);
+                            }}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                        )}
+                        {can("treatmentRecords.write") && !invoice && (
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            aria-label="Thêm vật tư"
+                            title="Thêm vật tư"
+                            onClick={() => setMaterialRecord(record)}
+                          >
+                            <Package className="h-4 w-4" />
+                          </Button>
+                        )}
+                        {can("invoices.fromTreatment") && !invoice && (
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            aria-label="Tạo hóa đơn"
+                            title="Tạo hóa đơn từ hồ sơ điều trị"
+                            onClick={() => setInvoiceRecord(record)}
+                          >
+                            <Receipt className="h-4 w-4" />
+                          </Button>
+                        )}
+                        {can("invoices.fromTreatment") && invoice && (
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            aria-label="Hồ sơ đã có hóa đơn"
+                            title={`Đã có hóa đơn ${invoice.invoiceNumber}`}
+                            disabled
+                          >
+                            <Receipt className="h-4 w-4" />
+                          </Button>
+                        )}
+                        {can("treatmentRecords.delete") && (
+                          <Button
+                            variant="destructive"
+                            size="icon"
+                            aria-label="Xóa hồ sơ điều trị"
+                            title="Xóa hồ sơ điều trị"
+                            onClick={() => setDeleteRecord(record)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>
@@ -569,7 +584,9 @@ export function TreatmentRecordsPage() {
         <DialogContent className="sm:max-w-3xl">
           <DialogHeader>
             <DialogTitle>
-              {materialsRecord ? `Vật tư điều trị · ${materialsRecord.patientName}` : "Vật tư điều trị"}
+              {materialsRecord
+                ? `Vật tư điều trị · ${materialsRecord.patientName}`
+                : "Vật tư điều trị"}
             </DialogTitle>
             <DialogDescription>
               {materialsRecord && invoiceByRecordId.has(materialsRecord.id)
@@ -611,7 +628,11 @@ export function TreatmentRecordsPage() {
                               variant="destructive"
                               size="icon"
                               aria-label="Xóa vật tư"
-                              title={locked ? "Hồ sơ đã có hóa đơn nên không thể xóa vật tư" : "Xóa vật tư"}
+                              title={
+                                locked
+                                  ? "Hồ sơ đã có hóa đơn nên không thể xóa vật tư"
+                                  : "Xóa vật tư"
+                              }
                               disabled={locked}
                               onClick={() => {
                                 if (materialsRecord) {

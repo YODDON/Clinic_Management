@@ -29,6 +29,26 @@ public class ShiftRepositoryImpl implements ShiftRepository {
     }
 
     @Override
+    public boolean hasOverlappingShift(
+        String dentistId,
+        String shiftDate,
+        String startTime,
+        String endTime,
+        String excludedShiftId
+    ) {
+        Integer count = jdbcTemplate.queryForObject("""
+            SELECT COUNT(*)
+            FROM dentist_shifts
+            WHERE dentist_id = ?
+              AND shift_date = ?
+              AND start_time < ?
+              AND end_time > ?
+              AND (? IS NULL OR id <> ?)
+            """, Integer.class, dentistId, shiftDate, endTime, startTime, excludedShiftId, excludedShiftId);
+        return count != null && count > 0;
+    }
+
+    @Override
     public void insert(String id, CreateDentistShiftRequest request) {
         jdbcTemplate.update("""
             INSERT INTO dentist_shifts (id, dentist_id, shift_date, start_time, end_time, status, notes)

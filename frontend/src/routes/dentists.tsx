@@ -42,9 +42,7 @@ function buildDentistFields(isEditing: boolean) {
       name: "password",
       label: "Mật khẩu",
       required: !isEditing,
-      description: isEditing
-        ? "Để trống nếu không đổi mật khẩu."
-        : "Bắt buộc khi tạo mới nha sĩ.",
+      description: isEditing ? "Để trống nếu không đổi mật khẩu." : "Bắt buộc khi tạo mới nha sĩ.",
     },
     { name: "phone", label: "Số điện thoại" },
     { name: "dob", label: "Ngày sinh", type: "date" as const },

@@ -69,14 +69,22 @@ function NewAppointmentPage() {
     enabled: Boolean(dentistId),
   });
   const slotsQuery = useQuery({
-    queryKey: ["public", "slots", dentistId, date && isValid(date) ? format(date, "yyyy-MM-dd") : ""],
+    queryKey: [
+      "public",
+      "slots",
+      dentistId,
+      date && isValid(date) ? format(date, "yyyy-MM-dd") : "",
+    ],
     queryFn: () => publicApi.availableSlots(dentistId, format(date as Date, "yyyy-MM-dd")),
     enabled: Boolean(dentistId && date && isValid(date)),
   });
 
-  const services = servicesQuery.data || [];
-  const dentists = dentistsQuery.data || [];
-  const availableDates = availableDatesQuery.data?.dates || [];
+  const services = useMemo(() => servicesQuery.data ?? [], [servicesQuery.data]);
+  const dentists = useMemo(() => dentistsQuery.data ?? [], [dentistsQuery.data]);
+  const availableDates = useMemo(
+    () => availableDatesQuery.data?.dates ?? [],
+    [availableDatesQuery.data?.dates],
+  );
   const slots = slotsQuery.data?.slots ?? null;
 
   useEffect(() => {
@@ -114,7 +122,8 @@ function NewAppointmentPage() {
     () => dentists.find((dentist) => dentist.id === dentistId),
     [dentistId, dentists],
   );
-  const canNext = step === 1 ? !!serviceId : step === 2 ? !!dentistId && !!date && isValid(date) && !!slot : true;
+  const canNext =
+    step === 1 ? !!serviceId : step === 2 ? !!dentistId && !!date && isValid(date) && !!slot : true;
 
   const createMutation = useMutation({
     mutationFn: customerPortalApi.createAppointment,
@@ -138,11 +147,7 @@ function NewAppointmentPage() {
   };
 
   return (
-    <CustomerShell
-      pathname="/my/appointments/new"
-      title="Đặt lịch mới"
-      subtitle="Hoàn thành 3 bước để tạo lịch hẹn online. Lịch sẽ vào trạng thái pending theo đúng business rule V2."
-    >
+    <CustomerShell pathname="/my/appointments/new" title="Đặt lịch mới">
       <div className="mb-7">
         <Stepper step={step} />
       </div>
@@ -186,7 +191,9 @@ function NewAppointmentPage() {
       <div className="mt-7 flex items-center justify-between">
         <Button
           variant="outline"
-          onClick={() => (step === 1 ? void navigate({ to: "/my/appointments" }) : setStep((step - 1) as Step))}
+          onClick={() =>
+            step === 1 ? void navigate({ to: "/my/appointments" }) : setStep((step - 1) as Step)
+          }
         >
           <ArrowLeft className="h-4 w-4" />
           {step === 1 ? "Hủy" : "Quay lại"}
@@ -197,7 +204,11 @@ function NewAppointmentPage() {
           </Button>
         ) : (
           <Button onClick={() => void submit()} disabled={createMutation.isPending}>
-            {createMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+            {createMutation.isPending ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Check className="h-4 w-4" />
+            )}
             Xác nhận đặt lịch
           </Button>
         )}
@@ -226,7 +237,12 @@ function Stepper({ step }: { step: Step }) {
             >
               {done ? <Check className="h-4 w-4" /> : current}
             </div>
-            <span className={cn("hidden text-sm font-medium sm:inline", active ? "text-foreground" : "text-muted-foreground")}>
+            <span
+              className={cn(
+                "hidden text-sm font-medium sm:inline",
+                active ? "text-foreground" : "text-muted-foreground",
+              )}
+            >
               {label}
             </span>
             {index < STEP_LABELS.length - 1 && <div className="h-px flex-1 bg-border" />}
@@ -270,7 +286,9 @@ function ServiceStep({
             onClick={() => onChange(service.id)}
             className={cn(
               "rounded-lg border-2 bg-card p-5 text-left transition-all hover:border-primary",
-              selected ? "border-primary shadow-[0_18px_60px_-26px_rgba(13,148,136,0.24)]" : "border-border",
+              selected
+                ? "border-primary shadow-[0_18px_60px_-26px_rgba(13,148,136,0.24)]"
+                : "border-border",
             )}
           >
             <div className="mb-2 flex items-center justify-between">
@@ -335,7 +353,9 @@ function DentistDateStep({
                 onClick={() => onDentistChange(dentist.id)}
                 className={cn(
                   "flex items-start gap-3 rounded-lg border-2 bg-card p-4 text-left transition-all hover:border-primary",
-                  selected ? "border-primary shadow-[0_18px_60px_-26px_rgba(13,148,136,0.24)]" : "border-border",
+                  selected
+                    ? "border-primary shadow-[0_18px_60px_-26px_rgba(13,148,136,0.24)]"
+                    : "border-border",
                 )}
               >
                 <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-accent font-bold text-accent-foreground">
@@ -348,7 +368,9 @@ function DentistDateStep({
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-bold">{dentist.name}</p>
                   <p className="truncate text-xs text-primary">{dentist.specialization}</p>
-                  <p className="mt-1 text-xs text-muted-foreground">{dentist.yearsExperience} năm kinh nghiệm</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {dentist.yearsExperience} năm kinh nghiệm
+                  </p>
                 </div>
                 {selected && <Check className="h-5 w-5 text-primary" />}
               </button>
@@ -363,9 +385,17 @@ function DentistDateStep({
             <h3 className="mb-3 text-sm font-semibold">2. Chọn ngày</h3>
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="outline" className={cn("w-full justify-start font-normal", !date && "text-muted-foreground")}>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "w-full justify-start font-normal",
+                    !date && "text-muted-foreground",
+                  )}
+                >
                   <CalendarIcon className="h-4 w-4" />
-                  {date && isValid(date) ? format(date, "EEEE, dd/MM/yyyy", { locale: vi }) : "Chọn ngày hẹn"}
+                  {date && isValid(date)
+                    ? format(date, "EEEE, dd/MM/yyyy", { locale: vi })
+                    : "Chọn ngày hẹn"}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
@@ -387,13 +417,18 @@ function DentistDateStep({
               </PopoverContent>
             </Popover>
             {loadingDates ? (
-              <p className="mt-2 text-xs text-muted-foreground">Đang tải các ngày bác sĩ có ca trực...</p>
+              <p className="mt-2 text-xs text-muted-foreground">
+                Đang tải các ngày bác sĩ có ca trực...
+              </p>
             ) : availableDates.length > 0 ? (
               <p className="mt-2 text-xs text-muted-foreground">
-                Chỉ chọn được ngày có ca trực. Ngày mở lịch gần nhất: {availableDates.slice(0, 3).join(", ")}
+                Chỉ chọn được ngày có ca trực. Ngày mở lịch gần nhất:{" "}
+                {availableDates.slice(0, 3).join(", ")}
               </p>
             ) : (
-              <p className="mt-2 text-xs text-destructive">Bác sĩ này hiện chưa có ca trực để customer đặt online.</p>
+              <p className="mt-2 text-xs text-destructive">
+                Bác sĩ này hiện chưa có ca trực để customer đặt online.
+              </p>
             )}
           </div>
 
@@ -421,34 +456,44 @@ function DentistDateStep({
                 ))}
               </div>
             )}
-            {date && isValid(date) && !loadingDates && !loadingSlots && slots !== null && slots.length === 0 && (
-              <div className="rounded-md border border-dashed border-border bg-secondary/30 p-6 text-center text-sm text-muted-foreground">
-                Nha sĩ không có lịch trống ngày này. Vui lòng chọn ngày khác.
-              </div>
-            )}
-            {date && isValid(date) && !loadingDates && !loadingSlots && slots && slots.length > 0 && (
-              <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
-                {slots.map((value) => {
-                  const selected = slot === value;
+            {date &&
+              isValid(date) &&
+              !loadingDates &&
+              !loadingSlots &&
+              slots !== null &&
+              slots.length === 0 && (
+                <div className="rounded-md border border-dashed border-border bg-secondary/30 p-6 text-center text-sm text-muted-foreground">
+                  Nha sĩ không có lịch trống ngày này. Vui lòng chọn ngày khác.
+                </div>
+              )}
+            {date &&
+              isValid(date) &&
+              !loadingDates &&
+              !loadingSlots &&
+              slots &&
+              slots.length > 0 && (
+                <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+                  {slots.map((value) => {
+                    const selected = slot === value;
 
-                  return (
-                    <button
-                      key={value}
-                      type="button"
-                      onClick={() => onSlotChange(value)}
-                      className={cn(
-                        "rounded-md border px-2 py-2 text-sm font-medium transition-colors",
-                        selected
-                          ? "border-primary bg-primary text-primary-foreground"
-                          : "border-border hover:border-primary hover:text-primary",
-                      )}
-                    >
-                      {value}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
+                    return (
+                      <button
+                        key={value}
+                        type="button"
+                        onClick={() => onSlotChange(value)}
+                        className={cn(
+                          "rounded-md border px-2 py-2 text-sm font-medium transition-colors",
+                          selected
+                            ? "border-primary bg-primary text-primary-foreground"
+                            : "border-border hover:border-primary hover:text-primary",
+                        )}
+                      >
+                        {value}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
           </div>
         </div>
       )}
@@ -476,10 +521,29 @@ function ConfirmStep({
       <Card className="md:col-span-2">
         <CardContent className="space-y-4 p-5">
           <h3 className="text-base font-bold">Tóm tắt lịch hẹn</h3>
-          <SummaryRow icon={<Stethoscope className="h-4 w-4" />} label="Dịch vụ" value={service.name} sub={service.category || undefined} />
-          <SummaryRow icon={<Stethoscope className="h-4 w-4" />} label="Nha sĩ" value={dentist.name} sub={dentist.specialization} />
-          <SummaryRow icon={<CalendarIcon className="h-4 w-4" />} label="Ngày hẹn" value={format(date, "EEEE, dd/MM/yyyy", { locale: vi })} />
-          <SummaryRow icon={<Clock className="h-4 w-4" />} label="Giờ hẹn" value={slot} sub={`${service.durationMinutes} phút`} />
+          <SummaryRow
+            icon={<Stethoscope className="h-4 w-4" />}
+            label="Dịch vụ"
+            value={service.name}
+            sub={service.category || undefined}
+          />
+          <SummaryRow
+            icon={<Stethoscope className="h-4 w-4" />}
+            label="Nha sĩ"
+            value={dentist.name}
+            sub={dentist.specialization}
+          />
+          <SummaryRow
+            icon={<CalendarIcon className="h-4 w-4" />}
+            label="Ngày hẹn"
+            value={format(date, "EEEE, dd/MM/yyyy", { locale: vi })}
+          />
+          <SummaryRow
+            icon={<Clock className="h-4 w-4" />}
+            label="Giờ hẹn"
+            value={slot}
+            sub={`${service.durationMinutes} phút`}
+          />
 
           <div className="border-t border-border pt-4">
             <label className="mb-2 block text-sm font-medium">Ghi chú triệu chứng</label>
@@ -496,10 +560,15 @@ function ConfirmStep({
 
       <Card className="h-fit border-primary/30 bg-accent/40">
         <CardContent className="p-5">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Quy trình thanh toán</p>
-          <p className="mt-1 text-sm font-semibold text-primary">Chưa phát sinh chi phí khi đặt lịch</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Quy trình thanh toán
+          </p>
+          <p className="mt-1 text-sm font-semibold text-primary">
+            Chưa phát sinh chi phí khi đặt lịch
+          </p>
           <p className="mt-3 text-xs text-muted-foreground">
-            Lịch hẹn sẽ ở trạng thái <strong>Chờ xác nhận</strong>. Hóa đơn chỉ được tạo sau khi bác sĩ khám, ghi chẩn đoán và vật tư điều trị.
+            Lịch hẹn sẽ ở trạng thái <strong>Chờ xác nhận</strong>. Hóa đơn chỉ được tạo sau khi bác
+            sĩ khám, ghi chẩn đoán và vật tư điều trị.
           </p>
         </CardContent>
       </Card>

@@ -4,7 +4,7 @@ import jakarta.validation.constraints.NotBlank;
 
 public record CreateTreatmentRecordRequest(
     @NotBlank String patientId,
-    String appointmentId,
+    @NotBlank String appointmentId,
     @NotBlank String dentistId,
     String visitDate,
     String chiefComplaint,

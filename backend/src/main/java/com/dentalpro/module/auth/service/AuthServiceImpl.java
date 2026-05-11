@@ -36,7 +36,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public LoginResponse register(RegisterRequest request) {
         if (userRepository.emailExists(request.email())) {
-            throw new BadRequestException("Email already exists");
+            throw new BadRequestException("Email đã tồn tại");
         }
 
         String userId = UUID.randomUUID().toString();
@@ -56,7 +56,7 @@ public class AuthServiceImpl implements AuthService {
         Map<String, Object> user = loadUserByEmail(request.email());
 
         if (!passwordEncoder.matches(request.password(), (String) user.get("password_hash"))) {
-            throw new UnauthorizedException("Invalid credentials");
+            throw new UnauthorizedException("Email hoặc mật khẩu không đúng");
         }
 
         String token = jwtTokenProvider.generateToken(request.email());
@@ -82,10 +82,10 @@ public class AuthServiceImpl implements AuthService {
     public void changePassword(String email, ChangePasswordRequest request) {
         Map<String, Object> user = loadUserByEmail(email);
         if (!passwordEncoder.matches(request.currentPassword(), (String) user.get("password_hash"))) {
-            throw new UnauthorizedException("Current password is incorrect");
+            throw new UnauthorizedException("Mật khẩu hiện tại không đúng");
         }
         if (!request.newPassword().equals(request.confirmPassword())) {
-            throw new BadRequestException("New password confirmation does not match");
+            throw new BadRequestException("Xác nhận mật khẩu mới không khớp");
         }
 
         userRepository.updatePassword(email, passwordEncoder.encode(request.newPassword()));
@@ -94,7 +94,7 @@ public class AuthServiceImpl implements AuthService {
     private Map<String, Object> loadUserByEmail(String email) {
         List<Map<String, Object>> rows = userRepository.findAccountRowsByEmail(email, true);
         if (rows.isEmpty()) {
-            throw new UnauthorizedException("User not found");
+            throw new UnauthorizedException("Không tìm thấy tài khoản");
         }
         return rows.get(0);
     }

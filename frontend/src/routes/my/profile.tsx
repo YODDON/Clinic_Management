@@ -71,7 +71,12 @@ function CustomerProfilePage() {
             <div className="grid gap-5 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="fullName">Họ và tên</Label>
-                <Input id="fullName" placeholder="Nguyễn Văn A" value={name} onChange={(event) => setName(event.target.value)} />
+                <Input
+                  id="fullName"
+                  placeholder="Nguyễn Văn A"
+                  value={name}
+                  onChange={(event) => setName(event.target.value)}
+                />
               </div>
 
               <div className="space-y-2">
@@ -84,7 +89,12 @@ function CustomerProfilePage() {
 
               <div className="space-y-2">
                 <Label htmlFor="phone">Số điện thoại</Label>
-                <Input id="phone" placeholder="0901234567" value={phone} onChange={(event) => setPhone(event.target.value)} />
+                <Input
+                  id="phone"
+                  placeholder="0901234567"
+                  value={phone}
+                  onChange={(event) => setPhone(event.target.value)}
+                />
               </div>
 
               <div className="space-y-2">
@@ -93,7 +103,10 @@ function CustomerProfilePage() {
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
-                      className={cn("w-full justify-start font-normal", !dateOfBirth && "text-muted-foreground")}
+                      className={cn(
+                        "w-full justify-start font-normal",
+                        !dateOfBirth && "text-muted-foreground",
+                      )}
                     >
                       <CalendarIcon className="h-4 w-4" />
                       {dateOfBirth ? dateOfBirth.toLocaleDateString("vi-VN") : "Chọn ngày sinh"}
@@ -148,7 +161,11 @@ function CustomerProfilePage() {
 
             <div className="flex justify-end border-t border-border pt-4">
               <Button type="submit" disabled={saveMutation.isPending}>
-                {saveMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                {saveMutation.isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Save className="h-4 w-4" />
+                )}
                 Lưu thay đổi
               </Button>
             </div>

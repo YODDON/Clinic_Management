@@ -210,10 +210,7 @@ export function ServicesPage() {
   });
 
   return (
-    <AppShell
-      title="Dịch vụ & Ghế nha"
-      allowedRoles={["admin", "dentist"]}
-    >
+    <AppShell title="Dịch vụ & Ghế nha" allowedRoles={["admin", "dentist"]}>
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <div className="mb-4 flex items-center justify-between gap-3">
           <TabsList>

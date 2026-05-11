@@ -148,7 +148,7 @@ public class TreatmentRecordServiceImpl implements TreatmentRecordService {
     private Map<String, Object> resolveAccount(String email) {
         List<Map<String, Object>> rows = userRepository.findAccountRowsByEmail(email, false);
         if (rows.isEmpty()) {
-            throw new ResourceNotFoundException("User not found");
+            throw new ResourceNotFoundException("Không tìm thấy tài khoản");
         }
         return rows.get(0);
     }
@@ -159,30 +159,30 @@ public class TreatmentRecordServiceImpl implements TreatmentRecordService {
         String userId = String.valueOf(account.get("id"));
 
         if ("dentist".equals(role) && !userId.equals(dentistId)) {
-            throw new BadRequestException("Dentists can only manage their own treatment records");
+            throw new BadRequestException("Nha sĩ chỉ được quản lý hồ sơ điều trị của chính mình");
         }
     }
 
     private void ensureRecordNotInvoiced(String recordId) {
         if (treatmentRecordRepository.invoiceExistsForRecord(recordId)) {
-            throw new BadRequestException("Treatment materials cannot be changed after an invoice has been created");
+            throw new BadRequestException("Không thể thay đổi vật tư sau khi đã tạo hóa đơn");
         }
     }
 
     private void validateRecordInput(String patientId, String appointmentId, String dentistId) {
         if (!treatmentRecordRepository.patientExists(patientId)) {
-            throw new ResourceNotFoundException("Patient not found");
+            throw new ResourceNotFoundException("Không tìm thấy bệnh nhân");
         }
         if (!treatmentRecordRepository.dentistExists(dentistId)) {
-            throw new ResourceNotFoundException("Dentist not found");
+            throw new ResourceNotFoundException("Không tìm thấy nha sĩ");
         }
         if (appointmentId == null || appointmentId.isBlank()) {
-            return;
+            throw new BadRequestException("Hồ sơ điều trị bắt buộc phải gắn với một lịch hẹn");
         }
 
         List<Map<String, Object>> appointments = treatmentRecordRepository.findAppointmentRelation(appointmentId);
         if (appointments.isEmpty()) {
-            throw new ResourceNotFoundException("Appointment not found");
+            throw new ResourceNotFoundException("Không tìm thấy lịch hẹn");
         }
 
         Map<String, Object> appointment = appointments.get(0);
@@ -190,10 +190,10 @@ public class TreatmentRecordServiceImpl implements TreatmentRecordService {
         String appointmentDentistId = (String) appointment.get("dentist_id");
 
         if (!patientId.equals(appointmentPatientId)) {
-            throw new BadRequestException("Appointment does not belong to the selected patient");
+            throw new BadRequestException("Lịch hẹn không thuộc về bệnh nhân đã chọn");
         }
         if (appointmentDentistId != null && !appointmentDentistId.equals(dentistId)) {
-            throw new BadRequestException("Selected dentist does not match the appointment");
+            throw new BadRequestException("Nha sĩ được chọn không khớp với lịch hẹn");
         }
     }
 }

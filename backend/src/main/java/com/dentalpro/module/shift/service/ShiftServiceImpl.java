@@ -37,6 +37,14 @@ public class ShiftServiceImpl implements ShiftService {
     public DentistShiftDto create(CreateDentistShiftRequest request) {
         validateShiftTime(request.startTime(), request.endTime());
         validateHolidayDate(request.shiftDate());
+        validateShiftOverlap(
+            request.dentistId(),
+            request.shiftDate(),
+            request.startTime(),
+            request.endTime(),
+            null
+        );
+
         String id = UUID.randomUUID().toString();
         shiftRepository.insert(id, request);
         return getShift(id);
@@ -45,11 +53,15 @@ public class ShiftServiceImpl implements ShiftService {
     @Override
     public DentistShiftDto update(String id, UpdateDentistShiftRequest request) {
         DentistShiftDto current = getShift(id);
-        validateShiftTime(
-            request.startTime() != null ? request.startTime() : current.startTime(),
-            request.endTime() != null ? request.endTime() : current.endTime()
-        );
-        validateHolidayDate(request.shiftDate() != null ? request.shiftDate() : current.shiftDate());
+        String dentistId = request.dentistId() != null ? request.dentistId() : current.dentistId();
+        String shiftDate = request.shiftDate() != null ? request.shiftDate() : current.shiftDate();
+        String startTime = request.startTime() != null ? request.startTime() : current.startTime();
+        String endTime = request.endTime() != null ? request.endTime() : current.endTime();
+
+        validateShiftTime(startTime, endTime);
+        validateHolidayDate(shiftDate);
+        validateShiftOverlap(dentistId, shiftDate, startTime, endTime, id);
+
         shiftRepository.update(id, request);
         return getShift(id);
     }
@@ -79,6 +91,18 @@ public class ShiftServiceImpl implements ShiftService {
         LocalDate targetDate = LocalDate.parse(shiftDate);
         if (clinicHolidayService.isHoliday(targetDate)) {
             throw new BadRequestException("Không thể tạo hoặc cập nhật ca làm việc vào ngày nghỉ của phòng khám.");
+        }
+    }
+
+    private void validateShiftOverlap(
+        String dentistId,
+        String shiftDate,
+        String startTime,
+        String endTime,
+        String excludedShiftId
+    ) {
+        if (shiftRepository.hasOverlappingShift(dentistId, shiftDate, startTime, endTime, excludedShiftId)) {
+            throw new BadRequestException("Ca làm việc bị trùng giờ với ca khác của bác sĩ trong ngày này.");
         }
     }
 }

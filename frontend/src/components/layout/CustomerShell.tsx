@@ -1,16 +1,24 @@
 import type { ReactNode } from "react";
 import { useEffect } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Calendar, CalendarPlus, LogOut, Menu, Receipt, Stethoscope, User as UserIcon } from "lucide-react";
+import {
+  Calendar,
+  CalendarPlus,
+  LogOut,
+  Menu,
+  Receipt,
+  Stethoscope,
+  User as UserIcon,
+} from "lucide-react";
 
-import { useSession } from "@/hooks/use-session";
-import { clearSession } from "@/lib/session";
-import { getDefaultRouteForRole, normalizeRole } from "@/lib/rbac";
-import { initials } from "@/lib/format";
-import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { useSession } from "@/hooks/use-session";
+import { initials } from "@/lib/format";
+import { getDefaultRouteForRole, normalizeRole } from "@/lib/rbac";
+import { clearSession } from "@/lib/session";
+import { cn } from "@/lib/utils";
 
 const items = [
   { to: "/my/appointments", label: "Lịch hẹn của tôi", icon: Calendar },
@@ -38,11 +46,11 @@ function SidebarContent({ pathname, onNavigate }: { pathname: string; onNavigate
       </Link>
 
       <nav className="flex-1 space-y-1 p-3">
-        <p className="px-3 pb-2 pt-3 text-[10px] font-semibold uppercase tracking-wider opacity-60">
-          Khu vực của bạn
-        </p>
         {items.map((item) => {
-          const active = item.to === "/my/appointments" ? pathname === "/my/appointments" : pathname.startsWith(item.to);
+          const active =
+            item.to === "/my/appointments"
+              ? pathname === "/my/appointments"
+              : pathname.startsWith(item.to);
 
           return (
             <Link
@@ -90,18 +98,11 @@ function SidebarContent({ pathname, onNavigate }: { pathname: string; onNavigate
 type CustomerShellProps = {
   pathname: string;
   title: string;
-  subtitle?: string;
   actions?: ReactNode;
   children: ReactNode;
 };
 
-export function CustomerShell({
-  pathname,
-  title,
-  subtitle,
-  actions,
-  children,
-}: CustomerShellProps) {
+export function CustomerShell({ pathname, title, actions, children }: CustomerShellProps) {
   const session = useSession();
   const navigate = useNavigate();
   const role = normalizeRole(session?.user.role);

@@ -7,7 +7,6 @@ import {
   CalendarClock,
   CalendarDays,
   ClipboardList,
-  Eye,
   Plus,
   ShieldCheck,
   Trash2,
@@ -15,15 +14,15 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
+import { ClientPagination } from "@/components/common/ClientPagination";
 import { ConfirmActionDialog } from "@/components/common/ConfirmActionDialog";
 import { CrudFormDialog } from "@/components/common/CrudFormDialog";
-import { ClientPagination } from "@/components/common/ClientPagination";
+import { PageSection } from "@/components/common/PageSection";
 import { QueryState } from "@/components/common/QueryState";
 import { StatCard } from "@/components/common/StatCard";
 import { StatusBadge } from "@/components/common/StatusBadge";
 import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -58,31 +57,21 @@ import type {
 
 type SectionKey = "holidays" | "shifts" | "roster" | "booking" | "tracking" | "patients";
 
-type SectionItem = {
-  key: SectionKey;
-  title: string;
-  description: string;
-};
-
-const sections: SectionItem[] = [
-  { key: "holidays", title: "Thiết lập ngày nghỉ", description: "Quản lý ngày nghỉ của phòng khám." },
-  { key: "shifts", title: "Thiết lập ca làm việc", description: "Tạo và chỉnh sửa ca làm việc." },
-  {
-    key: "roster",
-    title: "Đăng ký lịch trực bác sĩ",
-    description: "Phân công bác sĩ chịu trách nhiệm chính trong ngày.",
-  },
-  { key: "booking", title: "Đăng ký lịch khám", description: "Tạo lịch khám cho bệnh nhân." },
-  { key: "tracking", title: "Theo dõi lịch khám", description: "Theo dõi trạng thái lịch khám." },
-  { key: "patients", title: "Quản lý bệnh nhân", description: "Quản lý thông tin bệnh nhân." },
-];
-
+const sections: SectionKey[] = ["holidays", "shifts", "roster", "booking", "tracking", "patients"];
 const defaultSection: SectionKey = "holidays";
+const shiftPageSize = 10;
+const appointmentPageSize = 8;
+const patientPageSize = 8;
 
 const holidayFields = [
   { name: "holidayDate", label: "Ngày nghỉ", type: "date" as const, required: true },
   { name: "name", label: "Tên ngày nghỉ", required: true, placeholder: "Ví dụ: Nghỉ lễ quốc gia" },
-  { name: "description", label: "Mô tả", type: "textarea" as const, placeholder: "Ghi chú thêm nếu cần" },
+  {
+    name: "description",
+    label: "Mô tả",
+    type: "textarea" as const,
+    placeholder: "Ghi chú thêm nếu cần",
+  },
 ];
 
 function buildShiftFields(dentists: Dentist[]) {
@@ -102,9 +91,9 @@ function buildShiftFields(dentists: Dentist[]) {
       label: "Trạng thái",
       type: "select" as const,
       options: [
-        { label: "Planned", value: "planned" },
-        { label: "Completed", value: "completed" },
-        { label: "Off", value: "off" },
+        { label: "Dự kiến", value: "planned" },
+        { label: "Hoàn tất", value: "completed" },
+        { label: "Nghỉ", value: "off" },
       ],
     },
     { name: "notes", label: "Ghi chú", type: "textarea" as const },
@@ -203,10 +192,10 @@ function shiftDateByDays(dateValue: string, amount: number) {
 export const Route = createFileRoute("/app/schedule-management")({
   validateSearch: (search: Record<string, unknown>) => {
     const section =
-      typeof search.section === "string" &&
-      sections.some((item) => item.key === search.section)
+      typeof search.section === "string" && sections.includes(search.section as SectionKey)
         ? (search.section as SectionKey)
         : defaultSection;
+
     return { section };
   },
   component: ScheduleManagementPage,
@@ -228,6 +217,9 @@ function ScheduleManagementPage() {
   const [deleteShift, setDeleteShift] = useState<DentistShift | null>(null);
   const [shiftFilterDate, setShiftFilterDate] = useState(getTodayDateValue);
   const [shiftPage, setShiftPage] = useState(1);
+  const [bookingPage, setBookingPage] = useState(1);
+  const [trackingPage, setTrackingPage] = useState(1);
+  const [patientPage, setPatientPage] = useState(1);
 
   const [editingDuty, setEditingDuty] = useState<DentistDuty | null>(null);
   const [dutyFormOpen, setDutyFormOpen] = useState(false);
@@ -259,12 +251,12 @@ function ScheduleManagementPage() {
     queryFn: async () => (await patientsApi.list()).content,
   });
 
-  const holidays = holidaysQuery.data || [];
-  const shifts = shiftsQuery.data || [];
-  const duties = dutiesQuery.data || [];
-  const dentists = dentistsQuery.data || [];
-  const appointments = appointmentsQuery.data || [];
-  const patients = patientsQuery.data || [];
+  const holidays = useMemo(() => holidaysQuery.data ?? [], [holidaysQuery.data]);
+  const shifts = useMemo(() => shiftsQuery.data ?? [], [shiftsQuery.data]);
+  const duties = useMemo(() => dutiesQuery.data ?? [], [dutiesQuery.data]);
+  const dentists = useMemo(() => dentistsQuery.data ?? [], [dentistsQuery.data]);
+  const appointments = useMemo(() => appointmentsQuery.data ?? [], [appointmentsQuery.data]);
+  const patients = useMemo(() => patientsQuery.data ?? [], [patientsQuery.data]);
 
   const holidaySaveMutation = useMutation({
     mutationFn: async (values: Record<string, string>) => {
@@ -363,16 +355,15 @@ function ScheduleManagementPage() {
     return { total, pending, confirmed, completed };
   }, [appointments]);
 
-  const recentAppointments = useMemo(
+  const appointmentRows = useMemo(
     () =>
       [...appointments]
         .sort((a, b) => b.appointmentDate.localeCompare(a.appointmentDate))
-        .slice(0, 8),
+        .slice(0, 50),
     [appointments],
   );
 
-  const recentPatients = useMemo(() => patients.slice(0, 8), [patients]);
-
+  const patientRows = useMemo(() => patients.slice(0, 50), [patients]);
   const rosterRows = useMemo(
     () => [...duties].sort((a, b) => a.dutyDate.localeCompare(b.dutyDate)),
     [duties],
@@ -385,7 +376,10 @@ function ScheduleManagementPage() {
 
     const dentistIds = new Set(
       shifts
-        .filter((shift) => shift.shiftDate.slice(0, 10) === dutyFormValues.dutyDate && shift.status !== "off")
+        .filter(
+          (shift) =>
+            shift.shiftDate.slice(0, 10) === dutyFormValues.dutyDate && shift.status !== "off",
+        )
         .map((shift) => shift.dentistId),
     );
 
@@ -393,21 +387,19 @@ function ScheduleManagementPage() {
   }, [dentists, dutyFormValues.dutyDate, shifts]);
 
   useEffect(() => {
-    if (!dutyFormOpen) {
+    if (!dutyFormOpen || !dutyFormValues.dentistId) {
       return;
     }
 
-    if (!dutyFormValues.dentistId) {
-      return;
-    }
-
-    const isStillEligible = eligibleDutyDentists.some((dentist) => dentist.id === dutyFormValues.dentistId);
+    const isStillEligible = eligibleDutyDentists.some(
+      (dentist) => dentist.id === dutyFormValues.dentistId,
+    );
     if (!isStillEligible) {
       setDutyFormValues((current) => ({ ...current, dentistId: "" }));
     }
   }, [dutyFormOpen, dutyFormValues.dentistId, eligibleDutyDentists]);
 
-  const shiftPreview = useMemo(
+  const shiftRows = useMemo(
     () =>
       shifts
         .filter((shift) => shift.shiftDate.slice(0, 10) === shiftFilterDate)
@@ -419,11 +411,33 @@ function ScheduleManagementPage() {
     [shiftFilterDate, shifts],
   );
 
-  const shiftPageSize = 10;
-  const shiftTotalPages = Math.max(1, Math.ceil(shiftPreview.length / shiftPageSize));
-  const paginatedShiftPreview = useMemo(
-    () => shiftPreview.slice((shiftPage - 1) * shiftPageSize, shiftPage * shiftPageSize),
-    [shiftPage, shiftPreview],
+  const shiftTotalPages = Math.max(1, Math.ceil(shiftRows.length / shiftPageSize));
+  const paginatedShiftRows = useMemo(
+    () => shiftRows.slice((shiftPage - 1) * shiftPageSize, shiftPage * shiftPageSize),
+    [shiftPage, shiftRows],
+  );
+  const bookingTotalPages = Math.max(1, Math.ceil(appointmentRows.length / appointmentPageSize));
+  const paginatedBookingRows = useMemo(
+    () =>
+      appointmentRows.slice(
+        (bookingPage - 1) * appointmentPageSize,
+        bookingPage * appointmentPageSize,
+      ),
+    [appointmentRows, bookingPage],
+  );
+  const trackingTotalPages = Math.max(1, Math.ceil(appointmentRows.length / appointmentPageSize));
+  const paginatedTrackingRows = useMemo(
+    () =>
+      appointmentRows.slice(
+        (trackingPage - 1) * appointmentPageSize,
+        trackingPage * appointmentPageSize,
+      ),
+    [appointmentRows, trackingPage],
+  );
+  const patientTotalPages = Math.max(1, Math.ceil(patientRows.length / patientPageSize));
+  const paginatedPatientRows = useMemo(
+    () => patientRows.slice((patientPage - 1) * patientPageSize, patientPage * patientPageSize),
+    [patientPage, patientRows],
   );
 
   useEffect(() => {
@@ -435,438 +449,495 @@ function ScheduleManagementPage() {
       setShiftPage(shiftTotalPages);
     }
   }, [shiftPage, shiftTotalPages]);
+  useEffect(() => {
+    if (bookingPage > bookingTotalPages) {
+      setBookingPage(bookingTotalPages);
+    }
+  }, [bookingPage, bookingTotalPages]);
+  useEffect(() => {
+    if (trackingPage > trackingTotalPages) {
+      setTrackingPage(trackingTotalPages);
+    }
+  }, [trackingPage, trackingTotalPages]);
+  useEffect(() => {
+    if (patientPage > patientTotalPages) {
+      setPatientPage(patientTotalPages);
+    }
+  }, [patientPage, patientTotalPages]);
 
-  const selectedSection = sections.find((item) => item.key === section) || sections[0];
   const canManageHolidayRows = can("holidays.write") || can("holidays.delete");
   const canManageShiftRows = can("shifts.update") || can("shifts.delete");
   const canManageDutyRows = can("duties.update") || can("duties.delete");
 
   return (
-    <AppShell
-      title="Quản lý lịch khám"
-      allowedRoles={["admin", "dentist"]}
-      actions={
-        section === "holidays" && can("holidays.write") ? (
-          <Button
-            size="sm"
-            onClick={() => {
-              setEditingHoliday(null);
-              setHolidayFormOpen(true);
-            }}
-          >
-            <Plus className="mr-2 h-4 w-4" /> Thêm ngày nghỉ
-          </Button>
-        ) : section === "shifts" && can("shifts.create") ? (
-          <Button
-            size="sm"
-            onClick={() => {
-              setEditingShift(null);
-              setShiftFormOpen(true);
-            }}
-          >
-            <Plus className="mr-2 h-4 w-4" /> Thêm ca làm việc
-          </Button>
-        ) : section === "roster" && can("duties.create") ? (
-          <Button
-            size="sm"
-            onClick={() => {
-              setEditingDuty(null);
-              setDutyFormValues(toDutyValues());
-              setDutyFormOpen(true);
-            }}
-          >
-            <Plus className="mr-2 h-4 w-4" /> Thêm lịch trực
-          </Button>
-        ) : undefined
-      }
-    >
+    <AppShell title="Quản lý lịch khám" allowedRoles={["admin", "dentist"]}>
       <div className="space-y-6">
-        <Card className="border-slate-200 bg-[radial-gradient(circle_at_top_left,#eff8ff_0,#ffffff_55%,#f8fafc_100%)]">
-          <CardHeader>
-            <CardTitle className="text-2xl text-slate-900">{selectedSection.title}</CardTitle>
-            <CardDescription className="text-base">{selectedSection.description}</CardDescription>
-          </CardHeader>
-        </Card>
-
         {section === "holidays" && (
-          <Card className="border-slate-200">
-            <CardContent className="pt-6">
-              <QueryState
-                isLoading={holidaysQuery.isLoading}
-                error={holidaysQuery.error}
-                isEmpty={holidays.length === 0}
-                emptyIcon={CalendarDays}
-                emptyTitle="Chưa có ngày nghỉ"
-                emptyDescription="Khi admin thêm ngày nghỉ, danh sách sẽ hiển thị tại đây."
-                onRetry={() => holidaysQuery.refetch()}
-              >
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Ngày nghỉ</TableHead>
-                      <TableHead>Tên</TableHead>
-                      <TableHead>Mô tả</TableHead>
-                      {canManageHolidayRows && <TableHead className="text-right">Thao tác</TableHead>}
+          <PageSection
+            title="Thiết lập ngày nghỉ"
+            actions={
+              can("holidays.write") ? (
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    setEditingHoliday(null);
+                    setHolidayFormOpen(true);
+                  }}
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Thêm ngày nghỉ
+                </Button>
+              ) : undefined
+            }
+          >
+            <QueryState
+              isLoading={holidaysQuery.isLoading}
+              error={holidaysQuery.error}
+              isEmpty={holidays.length === 0}
+              emptyIcon={CalendarDays}
+              emptyTitle="Chưa có ngày nghỉ"
+              emptyDescription="Khi admin thêm ngày nghỉ, danh sách sẽ hiển thị tại đây."
+              onRetry={() => holidaysQuery.refetch()}
+            >
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Ngày nghỉ</TableHead>
+                    <TableHead>Tên</TableHead>
+                    <TableHead>Mô tả</TableHead>
+                    {canManageHolidayRows && <TableHead className="text-right">Thao tác</TableHead>}
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {holidays.map((holiday) => (
+                    <TableRow key={holiday.id}>
+                      <TableCell>{formatDate(holiday.holidayDate)}</TableCell>
+                      <TableCell className="font-medium">{holiday.name}</TableCell>
+                      <TableCell>{holiday.description || "Không có"}</TableCell>
+                      {canManageHolidayRows && (
+                        <TableCell>
+                          <div className="flex justify-end gap-2">
+                            {can("holidays.write") && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setEditingHoliday(holiday);
+                                  setHolidayFormOpen(true);
+                                }}
+                              >
+                                Chỉnh sửa
+                              </Button>
+                            )}
+                            {can("holidays.delete") && (
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => setDeleteHoliday(holiday)}
+                              >
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Xóa
+                              </Button>
+                            )}
+                          </div>
+                        </TableCell>
+                      )}
                     </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {holidays.map((holiday) => (
-                      <TableRow key={holiday.id}>
-                        <TableCell>{formatDate(holiday.holidayDate)}</TableCell>
-                        <TableCell className="font-medium">{holiday.name}</TableCell>
-                        <TableCell>{holiday.description || "Không có"}</TableCell>
-                        {canManageHolidayRows && (
-                          <TableCell>
-                            <div className="flex justify-end gap-2">
-                              {can("holidays.write") && (
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => {
-                                    setEditingHoliday(holiday);
-                                    setHolidayFormOpen(true);
-                                  }}
-                                >
-                                  Chỉnh sửa
-                                </Button>
-                              )}
-                              {can("holidays.delete") && (
-                                <Button variant="destructive" size="sm" onClick={() => setDeleteHoliday(holiday)}>
-                                  <Trash2 className="mr-2 h-4 w-4" /> Xóa
-                                </Button>
-                              )}
-                            </div>
-                          </TableCell>
-                        )}
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </QueryState>
-            </CardContent>
-          </Card>
+                  ))}
+                </TableBody>
+              </Table>
+            </QueryState>
+          </PageSection>
         )}
 
         {section === "shifts" && (
-          <Card className="border-slate-200">
-            <CardContent className="pt-6">
-              <div className="mb-4 flex flex-col gap-3">
-                <div className="w-full max-w-xs space-y-2">
-                  <div className="text-sm font-medium text-slate-700">Lọc theo ngày</div>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      className="shrink-0"
-                      onClick={() => setShiftFilterDate((current) => shiftDateByDays(current, -1))}
-                      aria-label="Lùi 1 ngày"
-                    >
-                      <ArrowLeft className="h-4 w-4" />
-                    </Button>
-                    <Input
-                      type="date"
-                      value={shiftFilterDate}
-                      onChange={(event) => setShiftFilterDate(event.target.value)}
-                    />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      className="shrink-0"
-                      onClick={() => setShiftFilterDate((current) => shiftDateByDays(current, 1))}
-                      aria-label="Tới 1 ngày"
-                    >
-                      <ArrowRight className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    Mặc định đang ưu tiên hiển thị toàn bộ bác sĩ có ca làm việc hôm nay.
-                  </p>
+          <PageSection
+            title="Thiết lập ca làm việc"
+            actions={
+              can("shifts.create") ? (
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    setEditingShift(null);
+                    setShiftFormOpen(true);
+                  }}
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Thêm ca làm việc
+                </Button>
+              ) : undefined
+            }
+          >
+            <div className="mb-4 flex flex-col gap-3">
+              <div className="w-full max-w-xs space-y-2">
+                <div className="text-sm font-medium text-slate-700">Lọc theo ngày</div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="shrink-0"
+                    onClick={() => setShiftFilterDate((current) => shiftDateByDays(current, -1))}
+                    aria-label="Lùi 1 ngày"
+                  >
+                    <ArrowLeft className="h-4 w-4" />
+                  </Button>
+                  <Input
+                    type="date"
+                    value={shiftFilterDate}
+                    onChange={(event) => setShiftFilterDate(event.target.value)}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="shrink-0"
+                    onClick={() => setShiftFilterDate((current) => shiftDateByDays(current, 1))}
+                    aria-label="Tới 1 ngày"
+                  >
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
                 </div>
+                <p className="text-sm text-muted-foreground">
+                  Mặc định đang ưu tiên hiển thị toàn bộ bác sĩ có ca làm việc hôm nay.
+                </p>
               </div>
-              <QueryState
-                isLoading={shiftsQuery.isLoading}
-                error={shiftsQuery.error}
-                isEmpty={shiftPreview.length === 0}
-                emptyIcon={CalendarClock}
-                emptyTitle="Không có ca làm việc trong ngày này"
-                emptyDescription="Hãy chọn một ngày khác để xem bác sĩ nào đang có ca làm việc."
-                onRetry={() => shiftsQuery.refetch()}
-              >
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Ngày</TableHead>
-                      <TableHead>Bác sĩ</TableHead>
-                      <TableHead>Giờ</TableHead>
-                      <TableHead>Trạng thái</TableHead>
-                      <TableHead>Ghi chú</TableHead>
-                      {canManageShiftRows && <TableHead className="text-right">Thao tác</TableHead>}
+            </div>
+            <QueryState
+              isLoading={shiftsQuery.isLoading}
+              error={shiftsQuery.error}
+              isEmpty={shiftRows.length === 0}
+              emptyIcon={CalendarClock}
+              emptyTitle="Không có ca làm việc trong ngày này"
+              emptyDescription="Hãy chọn một ngày khác để xem bác sĩ nào đang có ca làm việc."
+              onRetry={() => shiftsQuery.refetch()}
+            >
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Ngày</TableHead>
+                    <TableHead>Bác sĩ</TableHead>
+                    <TableHead>Giờ</TableHead>
+                    <TableHead>Trạng thái</TableHead>
+                    <TableHead>Ghi chú</TableHead>
+                    {canManageShiftRows && <TableHead className="text-right">Thao tác</TableHead>}
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {paginatedShiftRows.map((shift) => (
+                    <TableRow key={shift.id}>
+                      <TableCell>{formatDate(shift.shiftDate)}</TableCell>
+                      <TableCell>{shift.dentistName}</TableCell>
+                      <TableCell>
+                        {shift.startTime} - {shift.endTime}
+                      </TableCell>
+                      <TableCell>
+                        <StatusBadge value={shift.status} />
+                      </TableCell>
+                      <TableCell>{shift.notes || "Không có"}</TableCell>
+                      {canManageShiftRows && (
+                        <TableCell>
+                          <div className="flex justify-end gap-2">
+                            {can("shifts.update") && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setEditingShift(shift);
+                                  setShiftFormOpen(true);
+                                }}
+                              >
+                                Chỉnh sửa
+                              </Button>
+                            )}
+                            {can("shifts.delete") && (
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => setDeleteShift(shift)}
+                              >
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Xóa
+                              </Button>
+                            )}
+                          </div>
+                        </TableCell>
+                      )}
                     </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {paginatedShiftPreview.map((shift) => (
-                      <TableRow key={shift.id}>
-                        <TableCell>{formatDate(shift.shiftDate)}</TableCell>
-                        <TableCell>{shift.dentistName}</TableCell>
-                        <TableCell>
-                          {shift.startTime} - {shift.endTime}
-                        </TableCell>
-                        <TableCell>
-                          <StatusBadge value={shift.status} />
-                        </TableCell>
-                        <TableCell>{shift.notes || "Không có"}</TableCell>
-                        {canManageShiftRows && (
-                          <TableCell>
-                            <div className="flex justify-end gap-2">
-                              {can("shifts.update") && (
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => {
-                                    setEditingShift(shift);
-                                    setShiftFormOpen(true);
-                                  }}
-                                >
-                                  Chỉnh sửa
-                                </Button>
-                              )}
-                              {can("shifts.delete") && (
-                                <Button variant="destructive" size="sm" onClick={() => setDeleteShift(shift)}>
-                                  <Trash2 className="mr-2 h-4 w-4" /> Xóa
-                                </Button>
-                              )}
-                            </div>
-                          </TableCell>
-                        )}
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-                <ClientPagination
-                  page={shiftPage}
-                  totalItems={shiftPreview.length}
-                  pageSize={shiftPageSize}
-                  onPageChange={setShiftPage}
-                />
-              </QueryState>
-            </CardContent>
-          </Card>
+                  ))}
+                </TableBody>
+              </Table>
+              <ClientPagination
+                page={shiftPage}
+                totalItems={shiftRows.length}
+                pageSize={shiftPageSize}
+                onPageChange={setShiftPage}
+              />
+            </QueryState>
+          </PageSection>
         )}
 
         {section === "roster" && (
-          <Card className="border-slate-200">
-            <CardContent className="pt-6">
-              <QueryState
-                isLoading={dutiesQuery.isLoading || shiftsQuery.isLoading}
-                error={dutiesQuery.error || shiftsQuery.error}
-                isEmpty={rosterRows.length === 0}
-                emptyIcon={ShieldCheck}
-                emptyTitle="Chưa có lịch trực"
-                emptyDescription="Khi admin phân công bác sĩ trực chính, danh sách sẽ hiển thị tại đây."
-                onRetry={() => {
-                  void dutiesQuery.refetch();
-                  void shiftsQuery.refetch();
-                }}
-              >
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Ngày trực</TableHead>
-                      <TableHead>Bác sĩ trực chính</TableHead>
-                      <TableHead>Chuyên môn</TableHead>
-                      <TableHead>Ghi chú</TableHead>
-                      {canManageDutyRows && <TableHead className="text-right">Thao tác</TableHead>}
+          <PageSection
+            title="Đăng ký lịch trực bác sĩ"
+            actions={
+              can("duties.create") ? (
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    setEditingDuty(null);
+                    setDutyFormValues(toDutyValues());
+                    setDutyFormOpen(true);
+                  }}
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Thêm lịch trực
+                </Button>
+              ) : undefined
+            }
+          >
+            <QueryState
+              isLoading={dutiesQuery.isLoading || shiftsQuery.isLoading}
+              error={dutiesQuery.error || shiftsQuery.error}
+              isEmpty={rosterRows.length === 0}
+              emptyIcon={ShieldCheck}
+              emptyTitle="Chưa có lịch trực"
+              emptyDescription="Khi admin phân công bác sĩ trực chính, danh sách sẽ hiển thị tại đây."
+              onRetry={() => {
+                void dutiesQuery.refetch();
+                void shiftsQuery.refetch();
+              }}
+            >
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Ngày trực</TableHead>
+                    <TableHead>Bác sĩ trực chính</TableHead>
+                    <TableHead>Chuyên môn</TableHead>
+                    <TableHead>Ghi chú</TableHead>
+                    {canManageDutyRows && <TableHead className="text-right">Thao tác</TableHead>}
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {rosterRows.map((duty) => (
+                    <TableRow key={duty.id}>
+                      <TableCell>{formatDate(duty.dutyDate)}</TableCell>
+                      <TableCell className="font-medium">{duty.dentistName}</TableCell>
+                      <TableCell>{duty.specialization || "Không có"}</TableCell>
+                      <TableCell>{duty.notes || "Không có"}</TableCell>
+                      {canManageDutyRows && (
+                        <TableCell>
+                          <div className="flex justify-end gap-2">
+                            {can("duties.update") && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setEditingDuty(duty);
+                                  setDutyFormValues(toDutyValues(duty));
+                                  setDutyFormOpen(true);
+                                }}
+                              >
+                                Chỉnh sửa
+                              </Button>
+                            )}
+                            {can("duties.delete") && (
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => setDeleteDuty(duty)}
+                              >
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Xóa
+                              </Button>
+                            )}
+                          </div>
+                        </TableCell>
+                      )}
                     </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {rosterRows.map((duty) => (
-                      <TableRow key={duty.id}>
-                        <TableCell>{formatDate(duty.dutyDate)}</TableCell>
-                        <TableCell className="font-medium">{duty.dentistName}</TableCell>
-                        <TableCell>{duty.specialization || "Không có"}</TableCell>
-                        <TableCell>{duty.notes || "Không có"}</TableCell>
-                        {canManageDutyRows && (
-                          <TableCell>
-                            <div className="flex justify-end gap-2">
-                              {can("duties.update") && (
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => {
-                                    setEditingDuty(duty);
-                                    setDutyFormValues(toDutyValues(duty));
-                                    setDutyFormOpen(true);
-                                  }}
-                                >
-                                  Chỉnh sửa
-                                </Button>
-                              )}
-                              {can("duties.delete") && (
-                                <Button variant="destructive" size="sm" onClick={() => setDeleteDuty(duty)}>
-                                  <Trash2 className="mr-2 h-4 w-4" /> Xóa
-                                </Button>
-                              )}
-                            </div>
-                          </TableCell>
-                        )}
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </QueryState>
-            </CardContent>
-          </Card>
+                  ))}
+                </TableBody>
+              </Table>
+            </QueryState>
+          </PageSection>
         )}
 
         {section === "booking" && (
           <>
             <div className="grid gap-4 md:grid-cols-3">
-              <StatCard label="Tổng lịch hẹn" value={String(appointmentStats.total)} icon={CalendarDays} />
-              <StatCard label="Chờ xác nhận" value={String(appointmentStats.pending)} icon={CalendarDays} tone="warning" />
-              <StatCard label="Đã xác nhận" value={String(appointmentStats.confirmed)} icon={CalendarDays} tone="success" />
+              <StatCard
+                label="Tổng lịch hẹn"
+                value={String(appointmentStats.total)}
+                icon={CalendarDays}
+              />
+              <StatCard
+                label="Chờ xác nhận"
+                value={String(appointmentStats.pending)}
+                icon={CalendarDays}
+                tone="warning"
+              />
+              <StatCard
+                label="Đã xác nhận"
+                value={String(appointmentStats.confirmed)}
+                icon={CalendarDays}
+                tone="success"
+              />
             </div>
-            <Card className="border-slate-200">
-              <CardContent className="pt-6">
-                <div className="mb-4 flex justify-end">
-                  <Button variant="outline" size="sm" onClick={() => void navigate({ to: "/app/appointments" })}>
-                    Mở trang lịch hẹn <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </div>
-                <QueryState
-                  isLoading={appointmentsQuery.isLoading}
-                  error={appointmentsQuery.error}
-                  isEmpty={recentAppointments.length === 0}
-                  emptyIcon={CalendarDays}
-                  emptyTitle="Chưa có lịch khám"
-                  emptyDescription="Lịch khám mới sẽ xuất hiện tại đây."
-                  onRetry={() => appointmentsQuery.refetch()}
-                >
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Thời gian</TableHead>
-                        <TableHead>Bệnh nhân</TableHead>
-                        <TableHead>Bác sĩ</TableHead>
-                        <TableHead>Loại lịch</TableHead>
-                        <TableHead>Trạng thái</TableHead>
+            <PageSection title="Đăng ký lịch khám">
+              <QueryState
+                isLoading={appointmentsQuery.isLoading}
+                error={appointmentsQuery.error}
+                isEmpty={appointmentRows.length === 0}
+                emptyIcon={CalendarDays}
+                emptyTitle="Chưa có lịch khám"
+                emptyDescription="Lịch khám mới sẽ xuất hiện tại đây."
+                onRetry={() => appointmentsQuery.refetch()}
+              >
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Thời gian</TableHead>
+                      <TableHead>Bệnh nhân</TableHead>
+                      <TableHead>Bác sĩ</TableHead>
+                      <TableHead>Loại lịch</TableHead>
+                      <TableHead>Trạng thái</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {paginatedBookingRows.map((appointment) => (
+                      <TableRow key={appointment.id}>
+                        <TableCell>{formatDateTime(appointment.appointmentDate)}</TableCell>
+                        <TableCell>{appointment.patientName}</TableCell>
+                        <TableCell>{appointment.dentistName || "Chưa phân công"}</TableCell>
+                        <TableCell>{appointment.appointmentType}</TableCell>
+                        <TableCell>
+                          <StatusBadge value={appointment.status} />
+                        </TableCell>
                       </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {recentAppointments.map((appointment) => (
-                        <TableRow key={appointment.id}>
-                          <TableCell>{formatDateTime(appointment.appointmentDate)}</TableCell>
-                          <TableCell>{appointment.patientName}</TableCell>
-                          <TableCell>{appointment.dentistName || "Chưa phân công"}</TableCell>
-                          <TableCell>{appointment.appointmentType}</TableCell>
-                          <TableCell>
-                            <StatusBadge value={appointment.status} />
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </QueryState>
-              </CardContent>
-            </Card>
+                    ))}
+                  </TableBody>
+                </Table>
+                <ClientPagination
+                  page={bookingPage}
+                  totalItems={appointmentRows.length}
+                  pageSize={appointmentPageSize}
+                  onPageChange={setBookingPage}
+                />
+              </QueryState>
+            </PageSection>
           </>
         )}
 
         {section === "tracking" && (
           <>
             <div className="grid gap-4 md:grid-cols-4">
-              <StatCard label="Tổng lịch" value={String(appointmentStats.total)} icon={ClipboardList} />
-              <StatCard label="Pending" value={String(appointmentStats.pending)} icon={ClipboardList} tone="warning" />
-              <StatCard label="Confirmed" value={String(appointmentStats.confirmed)} icon={ClipboardList} tone="success" />
-              <StatCard label="Completed" value={String(appointmentStats.completed)} icon={ClipboardList} />
+              <StatCard
+                label="Tổng lịch"
+                value={String(appointmentStats.total)}
+                icon={ClipboardList}
+              />
+              <StatCard
+                label="Chờ xác nhận"
+                value={String(appointmentStats.pending)}
+                icon={ClipboardList}
+                tone="warning"
+              />
+              <StatCard
+                label="Đã xác nhận"
+                value={String(appointmentStats.confirmed)}
+                icon={ClipboardList}
+                tone="success"
+              />
+              <StatCard
+                label="Hoàn tất"
+                value={String(appointmentStats.completed)}
+                icon={ClipboardList}
+              />
             </div>
-            <Card className="border-slate-200">
-              <CardContent className="pt-6">
-                <div className="mb-4 flex justify-end">
-                  <Button variant="outline" size="sm" onClick={() => void navigate({ to: "/app/appointments" })}>
-                    Xử lý tại trang lịch hẹn <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </div>
-                <QueryState
-                  isLoading={appointmentsQuery.isLoading}
-                  error={appointmentsQuery.error}
-                  isEmpty={recentAppointments.length === 0}
-                  emptyIcon={ClipboardList}
-                  emptyTitle="Chưa có dữ liệu theo dõi"
-                  emptyDescription="Khi có lịch hẹn, trạng thái sẽ hiển thị tại đây."
-                  onRetry={() => appointmentsQuery.refetch()}
-                >
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Bệnh nhân</TableHead>
-                        <TableHead>Bác sĩ</TableHead>
-                        <TableHead>Thời gian</TableHead>
-                        <TableHead>Trạng thái</TableHead>
-                        <TableHead>Ghi chú</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {recentAppointments.map((appointment) => (
-                        <TableRow key={appointment.id}>
-                          <TableCell>{appointment.patientName}</TableCell>
-                          <TableCell>{appointment.dentistName || "Chưa phân công"}</TableCell>
-                          <TableCell>{formatDateTime(appointment.appointmentDate)}</TableCell>
-                          <TableCell>
-                            <StatusBadge value={appointment.status} />
-                          </TableCell>
-                          <TableCell>{appointment.notes || "Không có"}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </QueryState>
-              </CardContent>
-            </Card>
-          </>
-        )}
-
-        {section === "patients" && (
-          <Card className="border-slate-200">
-            <CardContent className="pt-6">
-              <div className="mb-4 flex justify-end">
-                <Button variant="outline" size="sm" onClick={() => void navigate({ to: "/app/patients" })}>
-                  Mở trang bệnh nhân <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              </div>
+            <PageSection title="Theo dõi lịch khám">
               <QueryState
-                isLoading={patientsQuery.isLoading}
-                error={patientsQuery.error}
-                isEmpty={recentPatients.length === 0}
-                emptyIcon={UserRound}
-                emptyTitle="Chưa có bệnh nhân"
-                emptyDescription="Danh sách bệnh nhân sẽ hiển thị tại đây."
-                onRetry={() => patientsQuery.refetch()}
+                isLoading={appointmentsQuery.isLoading}
+                error={appointmentsQuery.error}
+                isEmpty={appointmentRows.length === 0}
+                emptyIcon={ClipboardList}
+                emptyTitle="Chưa có dữ liệu theo dõi"
+                emptyDescription="Khi có lịch hẹn, trạng thái sẽ hiển thị tại đây."
+                onRetry={() => appointmentsQuery.refetch()}
               >
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Họ tên</TableHead>
-                      <TableHead>Giới tính</TableHead>
-                      <TableHead>Số điện thoại</TableHead>
+                      <TableHead>Bệnh nhân</TableHead>
+                      <TableHead>Bác sĩ</TableHead>
+                      <TableHead>Thời gian</TableHead>
                       <TableHead>Trạng thái</TableHead>
+                      <TableHead>Ghi chú</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {recentPatients.map((patient: Patient) => (
-                      <TableRow key={patient.id}>
-                        <TableCell className="font-medium">{patient.name}</TableCell>
-                        <TableCell>{patient.gender || "Không có"}</TableCell>
-                        <TableCell>{patient.phone || "Không có"}</TableCell>
-                        <TableCell>{patient.active ? "Đang hoạt động" : "Ngừng hoạt động"}</TableCell>
+                    {paginatedTrackingRows.map((appointment) => (
+                      <TableRow key={appointment.id}>
+                        <TableCell>{appointment.patientName}</TableCell>
+                        <TableCell>{appointment.dentistName || "Chưa phân công"}</TableCell>
+                        <TableCell>{formatDateTime(appointment.appointmentDate)}</TableCell>
+                        <TableCell>
+                          <StatusBadge value={appointment.status} />
+                        </TableCell>
+                        <TableCell>{appointment.notes || "Không có"}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
                 </Table>
+                <ClientPagination
+                  page={trackingPage}
+                  totalItems={appointmentRows.length}
+                  pageSize={appointmentPageSize}
+                  onPageChange={setTrackingPage}
+                />
               </QueryState>
-            </CardContent>
-          </Card>
+            </PageSection>
+          </>
+        )}
+
+        {section === "patients" && (
+          <PageSection title="Quản lý bệnh nhân">
+            <QueryState
+              isLoading={patientsQuery.isLoading}
+              error={patientsQuery.error}
+              isEmpty={patientRows.length === 0}
+              emptyIcon={UserRound}
+              emptyTitle="Chưa có bệnh nhân"
+              emptyDescription="Danh sách bệnh nhân sẽ hiển thị tại đây."
+              onRetry={() => patientsQuery.refetch()}
+            >
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Họ tên</TableHead>
+                    <TableHead>Giới tính</TableHead>
+                    <TableHead>Số điện thoại</TableHead>
+                    <TableHead>Trạng thái</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {paginatedPatientRows.map((patient: Patient) => (
+                    <TableRow key={patient.id}>
+                      <TableCell className="font-medium">{patient.name}</TableCell>
+                      <TableCell>{patient.gender || "Không có"}</TableCell>
+                      <TableCell>{patient.phone || "Không có"}</TableCell>
+                      <TableCell>{patient.active ? "Đang hoạt động" : "Ngừng hoạt động"}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+              <ClientPagination
+                page={patientPage}
+                totalItems={patientRows.length}
+                pageSize={patientPageSize}
+                onPageChange={setPatientPage}
+              />
+            </QueryState>
+          </PageSection>
         )}
       </div>
 

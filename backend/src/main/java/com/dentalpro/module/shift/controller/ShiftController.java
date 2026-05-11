@@ -21,27 +21,27 @@ public class ShiftController {
 
     @GetMapping
     public ApiResponse<PageResponse<DentistShiftDto>> getShifts() {
-        return ApiResponse.ok("Shifts fetched", shiftService.getShifts());
+        return ApiResponse.ok("Lấy danh sách ca làm việc thành công", shiftService.getShifts());
     }
 
     @GetMapping("/{id}")
     public ApiResponse<DentistShiftDto> getShift(@PathVariable String id) {
-        return ApiResponse.ok("Shift fetched", shiftService.getShift(id));
+        return ApiResponse.ok("Lấy thông tin ca làm việc thành công", shiftService.getShift(id));
     }
 
     @PostMapping
     public ApiResponse<DentistShiftDto> create(@Valid @RequestBody CreateDentistShiftRequest request) {
-        return ApiResponse.ok("Shift created", shiftService.create(request));
+        return ApiResponse.ok("Tạo ca làm việc thành công", shiftService.create(request));
     }
 
     @PatchMapping("/{id}")
     public ApiResponse<DentistShiftDto> update(@PathVariable String id, @Valid @RequestBody UpdateDentistShiftRequest request) {
-        return ApiResponse.ok("Shift updated", shiftService.update(id, request));
+        return ApiResponse.ok("Cập nhật ca làm việc thành công", shiftService.update(id, request));
     }
 
     @DeleteMapping("/{id}")
     public ApiResponse<Void> delete(@PathVariable String id) {
         shiftService.delete(id);
-        return ApiResponse.ok("Shift deleted", null);
+        return ApiResponse.ok("Xóa ca làm việc thành công", null);
     }
 }

@@ -155,7 +155,8 @@ export const holidaysApi = {
 export const usersApi = {
   list: () => request<PageResponse<SystemUser>>("/users"),
   create: (
-    body: Required<Pick<SystemUserPayload, "name" | "email" | "password" | "role">> & SystemUserPayload,
+    body: Required<Pick<SystemUserPayload, "name" | "email" | "password" | "role">> &
+      SystemUserPayload,
   ) => request<SystemUser>("/users", { method: "POST", body }),
   update: (id: string, body: SystemUserPayload) =>
     request<SystemUser>(`/users/${id}`, { method: "PATCH", body }),
@@ -205,7 +206,8 @@ export const appointmentsApi = {
 export const treatmentRecordsApi = {
   list: () => request<PageResponse<TreatmentRecord>>("/treatment-records"),
   create: (
-    body: Required<Pick<TreatmentRecordPayload, "patientId" | "dentistId">> & TreatmentRecordPayload,
+    body: Required<Pick<TreatmentRecordPayload, "patientId" | "dentistId">> &
+      TreatmentRecordPayload,
   ) => request<TreatmentRecord>("/treatment-records", { method: "POST", body }),
   update: (id: string, body: TreatmentRecordPayload) =>
     request<TreatmentRecord>(`/treatment-records/${id}`, { method: "PATCH", body }),
@@ -267,7 +269,8 @@ export const servicesApi = {
     request<DentalService>(`/services/${id}`, { method: "PATCH", body }),
   delete: (id: string) => request<void>(`/services/${id}`, { method: "DELETE" }),
   activate: (id: string) => request<DentalService>(`/services/${id}/activate`, { method: "POST" }),
-  deactivate: (id: string) => request<DentalService>(`/services/${id}/deactivate`, { method: "POST" }),
+  deactivate: (id: string) =>
+    request<DentalService>(`/services/${id}/deactivate`, { method: "POST" }),
   updatePrice: (id: string, body: ServicePriceUpdatePayload) =>
     request<DentalService>(`/services/${id}/price`, { method: "PATCH", body }),
   priceHistory: (id: string) => request<ServicePriceHistory[]>(`/services/${id}/price-history`),

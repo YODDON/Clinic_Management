@@ -25,7 +25,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         List<Map<String, Object>> rows = userRepository.findAccountRowsByEmail(email, false);
 
         if (rows.isEmpty()) {
-            throw new UsernameNotFoundException("User not found");
+            throw new UsernameNotFoundException("Không tìm thấy tài khoản");
         }
 
         Map<String, Object> row = rows.get(0);

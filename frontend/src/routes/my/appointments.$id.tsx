@@ -53,19 +53,47 @@ function AppointmentDetailPage() {
             <CardContent className="space-y-4 p-5">
               <div className="flex items-center gap-2">
                 <StatusBadge value={appointment.status} />
-                <span className="text-xs text-muted-foreground">#{appointment.id.slice(-6).toUpperCase()}</span>
+                <span className="text-xs text-muted-foreground">
+                  #{appointment.id.slice(-6).toUpperCase()}
+                </span>
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
-                <InfoRow icon={<Calendar className="h-4 w-4" />} label="Thời gian" value={formatDateTime(appointment.appointmentDate)} />
-                <InfoRow icon={<Clock className="h-4 w-4" />} label="Loại lịch hẹn" value={appointment.appointmentType} />
-                <InfoRow icon={<Stethoscope className="h-4 w-4" />} label="Dịch vụ" value={appointment.serviceName || "Chưa cập nhật"} />
-                <InfoRow icon={<Stethoscope className="h-4 w-4" />} label="Nha sĩ" value={appointment.dentistName || "Đang chờ phân công"} />
-                <InfoRow icon={<MapPin className="h-4 w-4" />} label="Ghế nha" value={appointment.chairName || "Chưa cập nhật"} />
-                <InfoRow icon={<Stethoscope className="h-4 w-4" />} label="Bệnh nhân" value={appointment.patientName} />
+                <InfoRow
+                  icon={<Calendar className="h-4 w-4" />}
+                  label="Thời gian"
+                  value={formatDateTime(appointment.appointmentDate)}
+                />
+                <InfoRow
+                  icon={<Clock className="h-4 w-4" />}
+                  label="Loại lịch hẹn"
+                  value={appointment.appointmentType}
+                />
+                <InfoRow
+                  icon={<Stethoscope className="h-4 w-4" />}
+                  label="Dịch vụ"
+                  value={appointment.serviceName || "Chưa cập nhật"}
+                />
+                <InfoRow
+                  icon={<Stethoscope className="h-4 w-4" />}
+                  label="Nha sĩ"
+                  value={appointment.dentistName || "Đang chờ phân công"}
+                />
+                <InfoRow
+                  icon={<MapPin className="h-4 w-4" />}
+                  label="Ghế nha"
+                  value={appointment.chairName || "Chưa cập nhật"}
+                />
+                <InfoRow
+                  icon={<Stethoscope className="h-4 w-4" />}
+                  label="Bệnh nhân"
+                  value={appointment.patientName}
+                />
               </div>
               <div className="rounded-lg border border-border bg-secondary/40 p-4">
                 <div className="text-xs uppercase tracking-wide text-muted-foreground">Ghi chú</div>
-                <div className="mt-2 text-sm text-foreground">{appointment.notes || "Không có ghi chú"}</div>
+                <div className="mt-2 text-sm text-foreground">
+                  {appointment.notes || "Không có ghi chú"}
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -73,13 +101,21 @@ function AppointmentDetailPage() {
           <Card className="h-fit border-primary/30 bg-accent/40">
             <CardContent className="space-y-4 p-5">
               <div>
-                <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Thanh toán</div>
-                <div className="mt-1 text-sm font-semibold text-primary">Chưa phát sinh hóa đơn từ lịch hẹn</div>
+                <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Thanh toán
+                </div>
+                <div className="mt-1 text-sm font-semibold text-primary">
+                  Chưa phát sinh hóa đơn từ lịch hẹn
+                </div>
                 <p className="mt-2 text-xs text-muted-foreground">
                   Chi phí sẽ chỉ xuất hiện trong mục hóa đơn sau khi bác sĩ hoàn tất hồ sơ điều trị.
                 </p>
               </div>
-              <Button variant="outline" className="w-full" onClick={() => void navigate({ to: "/my/appointments" })}>
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => void navigate({ to: "/my/appointments" })}
+              >
                 Quay lại danh sách
               </Button>
             </CardContent>

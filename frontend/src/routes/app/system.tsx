@@ -1,7 +1,7 @@
 import type { ComponentType } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import {
   BadgeDollarSign,
   Briefcase,
@@ -25,7 +25,7 @@ import { QueryState } from "@/components/common/QueryState";
 import { StatusBadge } from "@/components/common/StatusBadge";
 import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -67,7 +67,9 @@ const userFields = (isEditing: boolean) => [
     name: "password",
     label: "Mật khẩu",
     required: !isEditing,
-    description: isEditing ? "Để trống nếu không đổi mật khẩu." : "Bắt buộc khi tạo người dùng mới.",
+    description: isEditing
+      ? "Để trống nếu không đổi mật khẩu."
+      : "Bắt buộc khi tạo người dùng mới.",
   },
   { name: "phone", label: "Số điện thoại" },
   {
@@ -75,9 +77,7 @@ const userFields = (isEditing: boolean) => [
     label: "Vai trò",
     required: true,
     type: "select" as const,
-    options: [
-      { label: "Admin", value: "admin" },
-    ],
+    options: [{ label: "Admin", value: "admin" }],
   },
   {
     name: "active",
@@ -247,25 +247,11 @@ export const Route = createFileRoute("/app/system")({
 
 function SystemManagementPage() {
   const search = Route.useSearch();
-  const navigate = useNavigate();
   const section = search.section;
-  const selectedSection = sections.find((item) => item.id === section) || sections[0];
-  const setSection = (nextSection: SystemSection) => {
-    void navigate({ to: "/app/system", search: { section: nextSection } });
-  };
 
   return (
     <AppShell title="Quản lý hệ thống" allowedRoles={["admin"]}>
       <div className="space-y-6">
-        <Card className="border-slate-200 bg-[radial-gradient(circle_at_top_left,#eff8ff_0,#ffffff_55%,#f8fafc_100%)]">
-          <CardHeader>
-            <CardTitle className="text-base">Chức năng</CardTitle>
-            <CardDescription className="text-base">
-              Chọn chức năng từ menu xổ xuống ở thanh bên trái để chuyển nhanh giữa các phần quản trị.
-            </CardDescription>
-          </CardHeader>
-        </Card>
-
         <div className="min-w-0">
           {section === "users" && <UsersSection />}
           {section === "dentists" && <DentistsSection />}
@@ -306,7 +292,9 @@ function UsersSection() {
   const saveMutation = useMutation({
     mutationFn: async (values: Record<string, string>) => {
       const payload = toUserPayload(values);
-      return editingUser ? usersApi.update(editingUser.id, payload) : usersApi.create(payload as never);
+      return editingUser
+        ? usersApi.update(editingUser.id, payload)
+        : usersApi.create(payload as never);
     },
     onSuccess: async () => {
       toast.success(editingUser ? "Đã cập nhật người dùng" : "Đã tạo người dùng");
@@ -318,7 +306,8 @@ function UsersSection() {
   });
 
   const statusMutation = useMutation({
-    mutationFn: async (user: SystemUser) => (user.active ? usersApi.deactivate(user.id) : usersApi.activate(user.id)),
+    mutationFn: async (user: SystemUser) =>
+      user.active ? usersApi.deactivate(user.id) : usersApi.activate(user.id),
     onSuccess: async (_, user) => {
       toast.success(user.active ? "Đã ngừng hoạt động người dùng" : "Đã kích hoạt người dùng");
       setStatusUser(null);
@@ -373,7 +362,12 @@ function UsersSection() {
                 </TableCell>
                 <TableCell>
                   <div className="flex justify-end gap-1">
-                    <Button variant="outline" size="icon" onClick={() => setDetailUser(user)} title="Xem chi tiết">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => setDetailUser(user)}
+                      title="Xem chi tiết"
+                    >
                       <Eye className="h-4 w-4" />
                     </Button>
                     {isManagedUser(user) && (
@@ -438,7 +432,10 @@ function UsersSection() {
                 { label: "Email", value: detailUser.email },
                 { label: "Vai trò", value: titleCase(detailUser.role) },
                 { label: "Số điện thoại", value: detailUser.phone || "Chưa cập nhật" },
-                { label: "Trạng thái", value: detailUser.active ? "Đang hoạt động" : "Ngừng hoạt động" },
+                {
+                  label: "Trạng thái",
+                  value: detailUser.active ? "Đang hoạt động" : "Ngừng hoạt động",
+                },
               ]
             : []
         }
@@ -489,7 +486,9 @@ function DentistsSection() {
   const saveMutation = useMutation({
     mutationFn: async (values: Record<string, string>) => {
       const payload = toDentistPayload(values);
-      return editingDentist ? dentistsApi.update(editingDentist.id, payload) : dentistsApi.create(payload as never);
+      return editingDentist
+        ? dentistsApi.update(editingDentist.id, payload)
+        : dentistsApi.create(payload as never);
     },
     onSuccess: async () => {
       toast.success(editingDentist ? "Đã cập nhật bác sĩ" : "Đã tạo bác sĩ");
@@ -560,11 +559,18 @@ function DentistsSection() {
                 <TableCell>{dentist.specialization}</TableCell>
                 <TableCell>{formatCurrency(dentist.consultationFee)}</TableCell>
                 <TableCell>
-                  <StatusBadge value={dentist.active && dentist.available ? "active" : "inactive"} />
+                  <StatusBadge
+                    value={dentist.active && dentist.available ? "active" : "inactive"}
+                  />
                 </TableCell>
                 <TableCell>
                   <div className="flex justify-end gap-1">
-                    <Button variant="outline" size="icon" onClick={() => setDetailDentist(dentist)} title="Xem chi tiết">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => setDetailDentist(dentist)}
+                      title="Xem chi tiết"
+                    >
                       <Eye className="h-4 w-4" />
                     </Button>
                     <Button
@@ -686,7 +692,9 @@ function ServicesSection() {
   const saveMutation = useMutation({
     mutationFn: async (values: Record<string, string>) => {
       const payload = toServicePayload(values);
-      return editingService ? servicesApi.update(editingService.id, payload) : servicesApi.create(payload as never);
+      return editingService
+        ? servicesApi.update(editingService.id, payload)
+        : servicesApi.create(payload as never);
     },
     onSuccess: async () => {
       toast.success(editingService ? "Đã cập nhật dịch vụ" : "Đã tạo dịch vụ");
@@ -756,7 +764,12 @@ function ServicesSection() {
                 </TableCell>
                 <TableCell>
                   <div className="flex justify-end gap-1">
-                    <Button variant="outline" size="icon" onClick={() => setDetailService(service)} title="Xem chi tiết">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => setDetailService(service)}
+                      title="Xem chi tiết"
+                    >
                       <Eye className="h-4 w-4" />
                     </Button>
                     <Button
@@ -893,7 +906,10 @@ function PricingSection() {
   const servicesTotalPages = Math.max(1, Math.ceil(services.length / pageSize));
   const historyTotalPages = Math.max(1, Math.ceil(priceHistory.length / pageSize));
   const paginatedServices = services.slice((servicesPage - 1) * pageSize, servicesPage * pageSize);
-  const paginatedPriceHistory = priceHistory.slice((historyPage - 1) * pageSize, historyPage * pageSize);
+  const paginatedPriceHistory = priceHistory.slice(
+    (historyPage - 1) * pageSize,
+    historyPage * pageSize,
+  );
 
   useEffect(() => {
     setHistoryPage(1);
@@ -953,7 +969,11 @@ function PricingSection() {
                       <TableCell>{service.durationMinutes} phút</TableCell>
                       <TableCell>
                         <div className="flex justify-end gap-1">
-                          <Button variant="outline" size="sm" onClick={() => setSelectedService(service)}>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setSelectedService(service)}
+                          >
                             Xem lịch sử
                           </Button>
                           <Button
@@ -989,7 +1009,9 @@ function PricingSection() {
           </CardHeader>
           <CardContent className="space-y-4">
             {!selectedService ? (
-              <div className="text-sm text-muted-foreground">Chọn một dịch vụ để xem lịch sử điều chỉnh giá.</div>
+              <div className="text-sm text-muted-foreground">
+                Chọn một dịch vụ để xem lịch sử điều chỉnh giá.
+              </div>
             ) : (
               <QueryState
                 isLoading={priceHistoryQuery.isLoading}
@@ -1005,7 +1027,9 @@ function PricingSection() {
                     <div key={entry.id} className="rounded-lg border p-3">
                       <div className="flex items-center justify-between gap-3">
                         <div className="font-medium">{formatCurrency(entry.newPrice)}</div>
-                        <div className="text-xs text-muted-foreground">{formatDateTime(entry.createdAt)}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {formatDateTime(entry.createdAt)}
+                        </div>
                       </div>
                       <div className="mt-1 text-sm text-muted-foreground">
                         Từ {formatCurrency(entry.oldPrice)} sang {formatCurrency(entry.newPrice)}
