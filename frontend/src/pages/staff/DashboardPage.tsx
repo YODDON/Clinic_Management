@@ -32,7 +32,14 @@ export function StaffDashboardPage() {
     queryFn: inventoryApi.lowStock,
   });
 
-  const upcomingAppointments = (appointmentsQuery.data || []).slice(0, 5);
+  const now = Date.now();
+  const upcomingAppointments = (appointmentsQuery.data || [])
+    .filter((appointment) => new Date(appointment.appointmentDate).getTime() >= now)
+    .sort(
+      (a, b) =>
+        new Date(a.appointmentDate).getTime() - new Date(b.appointmentDate).getTime(),
+    )
+    .slice(0, 5);
   const lowStockItems = lowStockQuery.data || [];
 
   return (

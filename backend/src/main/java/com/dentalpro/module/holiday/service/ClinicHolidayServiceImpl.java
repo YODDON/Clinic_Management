@@ -40,6 +40,7 @@ public class ClinicHolidayServiceImpl implements ClinicHolidayService {
     public ClinicHolidayDto create(CreateClinicHolidayRequest request) {
         LocalDate holidayDate = LocalDate.parse(request.holidayDate());
         validateUniqueDate(holidayDate, null);
+        validateNoScheduleConflict(holidayDate);
         String id = UUID.randomUUID().toString();
         clinicHolidayRepository.insert(id, request);
         return getHoliday(id);
@@ -52,6 +53,9 @@ public class ClinicHolidayServiceImpl implements ClinicHolidayService {
             request.holidayDate() != null ? request.holidayDate() : current.holidayDate()
         );
         validateUniqueDate(holidayDate, id);
+        if (request.holidayDate() != null && !holidayDate.toString().equals(current.holidayDate())) {
+            validateNoScheduleConflict(holidayDate);
+        }
         clinicHolidayRepository.update(id, request);
         return getHoliday(id);
     }
@@ -70,6 +74,18 @@ public class ClinicHolidayServiceImpl implements ClinicHolidayService {
     private void validateUniqueDate(LocalDate holidayDate, String excludingId) {
         if (clinicHolidayRepository.existsByDate(holidayDate, excludingId)) {
             throw new BadRequestException("A holiday already exists on this date");
+        }
+    }
+
+    private void validateNoScheduleConflict(LocalDate holidayDate) {
+        if (clinicHolidayRepository.hasWorkingShiftsOnDate(holidayDate)) {
+            throw new BadRequestException("Không thể tạo ngày nghỉ vì ngày này đã có ca làm việc của bác sĩ.");
+        }
+        if (clinicHolidayRepository.hasDutyOnDate(holidayDate)) {
+            throw new BadRequestException("Không thể tạo ngày nghỉ vì ngày này đã có lịch trực bác sĩ.");
+        }
+        if (clinicHolidayRepository.hasActiveAppointmentsOnDate(holidayDate)) {
+            throw new BadRequestException("Không thể tạo ngày nghỉ vì ngày này đã có lịch khám.");
         }
     }
 }

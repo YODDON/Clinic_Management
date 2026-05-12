@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/table";
 import { dentistsApi, shiftsApi } from "@/lib/api";
 import { useRoleAccess } from "@/hooks/use-role-access";
-import { formatDate } from "@/lib/format";
+import { formatDate, formatTime } from "@/lib/format";
 import { queryClient } from "@/lib/query-client";
 import type { Dentist, DentistShift, DentistShiftPayload } from "@/types/api";
 
@@ -191,8 +191,8 @@ export function ShiftsPage() {
                 <TableRow key={shift.id}>
                   <TableCell>{formatDate(shift.shiftDate)}</TableCell>
                   <TableCell>{shift.dentistName}</TableCell>
-                  <TableCell>{shift.startTime}</TableCell>
-                  <TableCell>{shift.endTime}</TableCell>
+                  <TableCell>{formatTime(shift.startTime)}</TableCell>
+                  <TableCell>{formatTime(shift.endTime)}</TableCell>
                   <TableCell>
                     <StatusBadge value={shift.status} />
                   </TableCell>

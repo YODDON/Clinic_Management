@@ -90,7 +90,7 @@ export function PublicNavbar() {
                       <Calendar className="h-4 w-4" /> Lịch hẹn của tôi
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => void navigate({ to: "/my/profile" })}>
-                      <User as={UserIcon} />
+                      <UserIcon className="h-4 w-4" />
                       Hồ sơ cá nhân
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
@@ -162,8 +162,4 @@ export function PublicNavbar() {
       </div>
     </header>
   );
-}
-
-function User({ as: Icon }: { as: typeof UserIcon }) {
-  return <Icon className="h-4 w-4" />;
 }

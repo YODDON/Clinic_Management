@@ -59,6 +59,38 @@ public class ClinicHolidayRepositoryImpl implements ClinicHolidayRepository {
     }
 
     @Override
+    public boolean hasWorkingShiftsOnDate(LocalDate holidayDate) {
+        Integer count = jdbcTemplate.queryForObject("""
+            SELECT COUNT(*)
+            FROM dentist_shifts
+            WHERE shift_date = ?
+              AND status <> 'off'
+            """, Integer.class, holidayDate);
+        return count != null && count > 0;
+    }
+
+    @Override
+    public boolean hasDutyOnDate(LocalDate holidayDate) {
+        Integer count = jdbcTemplate.queryForObject("""
+            SELECT COUNT(*)
+            FROM dentist_duties
+            WHERE duty_date = ?
+            """, Integer.class, holidayDate);
+        return count != null && count > 0;
+    }
+
+    @Override
+    public boolean hasActiveAppointmentsOnDate(LocalDate holidayDate) {
+        Integer count = jdbcTemplate.queryForObject("""
+            SELECT COUNT(*)
+            FROM appointments
+            WHERE DATE(appointment_date) = ?
+              AND status <> 'cancelled'
+            """, Integer.class, holidayDate);
+        return count != null && count > 0;
+    }
+
+    @Override
     public void insert(String id, CreateClinicHolidayRequest request) {
         jdbcTemplate.update("""
             INSERT INTO clinic_holidays (id, holiday_date, name, description)

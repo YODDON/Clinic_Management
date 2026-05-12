@@ -41,7 +41,7 @@ import {
   patientsApi,
   shiftsApi,
 } from "@/lib/api";
-import { formatDate, formatDateTime } from "@/lib/format";
+import { formatDate, formatDateTime, formatTimeRange } from "@/lib/format";
 import { queryClient } from "@/lib/query-client";
 import type {
   Appointment,
@@ -355,13 +355,22 @@ function ScheduleManagementPage() {
     return { total, pending, confirmed, completed };
   }, [appointments]);
 
-  const appointmentRows = useMemo(
-    () =>
-      [...appointments]
-        .sort((a, b) => b.appointmentDate.localeCompare(a.appointmentDate))
-        .slice(0, 50),
-    [appointments],
-  );
+  const appointmentRows = useMemo(() => {
+    const now = Date.now();
+    const sorted = [...appointments].sort((a, b) => {
+      const aTime = new Date(a.appointmentDate).getTime();
+      const bTime = new Date(b.appointmentDate).getTime();
+      const aUpcoming = aTime >= now;
+      const bUpcoming = bTime >= now;
+
+      if (aUpcoming && !bUpcoming) return -1;
+      if (!aUpcoming && bUpcoming) return 1;
+      if (aUpcoming && bUpcoming) return aTime - bTime;
+      return bTime - aTime;
+    });
+
+    return sorted.slice(0, 50);
+  }, [appointments]);
 
   const patientRows = useMemo(() => patients.slice(0, 50), [patients]);
   const rosterRows = useMemo(
@@ -629,7 +638,7 @@ function ScheduleManagementPage() {
                       <TableCell>{formatDate(shift.shiftDate)}</TableCell>
                       <TableCell>{shift.dentistName}</TableCell>
                       <TableCell>
-                        {shift.startTime} - {shift.endTime}
+                        {formatTimeRange(shift.startTime, shift.endTime)}
                       </TableCell>
                       <TableCell>
                         <StatusBadge value={shift.status} />
