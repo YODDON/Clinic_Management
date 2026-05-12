@@ -22,6 +22,11 @@ public interface InvoiceRepository {
     void insertInvoice(String id, CreateInvoiceRequest request, double subtotal, double insuranceDiscount, double totalAmount, String treatmentRecordId, String issuedBy);
     void insertInvoiceItem(String id, String invoiceId, InvoiceItemInput item);
     void updateInvoiceStatus(String id, String status);
+    boolean isInventoryDeducted(String invoiceId);
+    void markInventoryDeducted(String invoiceId);
+    List<Map<String, Object>> findInventoryItemsByInvoiceId(String invoiceId);
+    Integer findInventoryStock(String inventoryId);
+    void decrementInventoryStock(String inventoryId, int quantity);
     void deleteInvoiceItems(String invoiceId);
     void deleteInvoice(String id);
     int countPaymentsByInvoiceId(String invoiceId);

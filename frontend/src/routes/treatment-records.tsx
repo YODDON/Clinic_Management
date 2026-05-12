@@ -1,4 +1,4 @@
-import { useDeferredValue, useEffect, useState } from "react";
+import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { ClipboardList, Eye, Package, Pencil, Plus, Receipt, Trash2 } from "lucide-react";
@@ -6,10 +6,11 @@ import { toast } from "sonner";
 
 import { ClientPagination } from "@/components/common/ClientPagination";
 import { ConfirmActionDialog } from "@/components/common/ConfirmActionDialog";
-import { DetailDialog } from "@/components/common/DetailDialog";
 import { CrudFormDialog } from "@/components/common/CrudFormDialog";
+import { DetailDialog } from "@/components/common/DetailDialog";
 import { PageSection } from "@/components/common/PageSection";
 import { QueryState } from "@/components/common/QueryState";
+import { StatusBadge } from "@/components/common/StatusBadge";
 import { Toolbar } from "@/components/common/Toolbar";
 import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
@@ -17,9 +18,19 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -28,6 +39,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Textarea } from "@/components/ui/textarea";
+import { useRoleAccess } from "@/hooks/use-role-access";
 import {
   appointmentsApi,
   dentistsApi,
@@ -36,13 +49,11 @@ import {
   patientsApi,
   treatmentRecordsApi,
 } from "@/lib/api";
-import { useRoleAccess } from "@/hooks/use-role-access";
 import { formatDateTime } from "@/lib/format";
 import { queryClient } from "@/lib/query-client";
 import type {
   Appointment,
   Dentist,
-  InventoryItem,
   Invoice,
   Patient,
   TreatmentMaterial,
@@ -50,7 +61,6 @@ import type {
   TreatmentRecord,
   TreatmentRecordPayload,
 } from "@/types/api";
-import { StatusBadge } from "@/components/common/StatusBadge";
 
 export const Route = createFileRoute("/treatment-records")({
   component: TreatmentRecordsPage,
@@ -109,32 +119,6 @@ function buildRecordFields(
   }
 
   return fields;
-}
-
-function buildMaterialFields(items: InventoryItem[]) {
-  return [
-    {
-      name: "inventoryId",
-      label: "Vật tư",
-      type: "select" as const,
-      required: true,
-      options: items.map((item) => ({
-        label: `${item.name} · tồn ${item.stock} ${item.unit}`,
-        value: item.id,
-      })),
-    },
-    {
-      name: "quantity",
-      label: "Số lượng",
-      type: "number" as const,
-      required: true,
-      validate: (value) => {
-        const quantity = Number(value);
-        return Number.isFinite(quantity) && quantity > 0 ? undefined : "Số lượng phải lớn hơn 0.";
-      },
-    },
-    { name: "usageNote", label: "Ghi chú sử dụng", type: "textarea" as const },
-  ];
 }
 
 function toRecordValues(record?: TreatmentRecord, fallbackDentistId = "") {
@@ -229,6 +213,19 @@ function validateToothChartInput(value?: string) {
     return error instanceof Error ? error.message : "Sơ đồ răng không hợp lệ.";
   }
 }
+
+type MaterialDraftRow = {
+  inventoryId: string;
+  quantity: string;
+  usageNote: string;
+};
+
+const createEmptyMaterialRow = (): MaterialDraftRow => ({
+  inventoryId: "",
+  quantity: "1",
+  usageNote: "",
+});
+
 export function TreatmentRecordsPage() {
   const [search, setSearch] = useState("");
   const pageSize = 10;
@@ -245,6 +242,7 @@ export function TreatmentRecordsPage() {
   const [invoiceRecord, setInvoiceRecord] = useState<TreatmentRecord | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [deleteRecord, setDeleteRecord] = useState<TreatmentRecord | null>(null);
+  const [materialRows, setMaterialRows] = useState<MaterialDraftRow[]>([createEmptyMaterialRow()]);
   const deferredSearch = useDeferredValue(search);
 
   const recordsQuery = useQuery({
@@ -283,6 +281,11 @@ export function TreatmentRecordsPage() {
       invoiceByRecordId.set(invoice.treatmentRecordId, invoice);
     }
   }
+
+  const inventoryById = useMemo(
+    () => new Map((inventoryQuery.data || []).map((item) => [item.id, item])),
+    [inventoryQuery.data],
+  );
 
   const records = (recordsQuery.data || []).filter((record) => {
     if (!deferredSearch) return true;
@@ -340,19 +343,43 @@ export function TreatmentRecordsPage() {
     onError: (error: Error) => toast.error(error.message),
   });
 
-  const addMaterialMutation = useMutation({
-    mutationFn: async (values: Record<string, string>) => {
+  const addMultipleMaterialsMutation = useMutation({
+    mutationFn: async (rows: MaterialDraftRow[]) => {
       if (!materialRecord) throw new Error("Chưa chọn hồ sơ điều trị.");
-      const payload: TreatmentMaterialPayload = {
-        inventoryId: values.inventoryId,
-        quantity: Number(values.quantity),
-        usageNote: values.usageNote || null,
-      };
-      return treatmentRecordsApi.addMaterial(materialRecord.id, payload);
+
+      const payloads = rows.map((row, index) => {
+        if (!row.inventoryId) {
+          throw new Error(`Vui lòng chọn vật tư ở dòng ${index + 1}.`);
+        }
+
+        const quantity = Number(row.quantity);
+        if (!Number.isFinite(quantity) || quantity <= 0) {
+          throw new Error(`Số lượng ở dòng ${index + 1} phải lớn hơn 0.`);
+        }
+
+        return {
+          inventoryId: row.inventoryId,
+          quantity,
+          usageNote: row.usageNote || null,
+        } satisfies TreatmentMaterialPayload;
+      });
+
+      const hasDuplicate = payloads.some(
+        (payload, index) =>
+          payloads.findIndex((candidate) => candidate.inventoryId === payload.inventoryId) !== index,
+      );
+      if (hasDuplicate) {
+        throw new Error("Không thể chọn trùng cùng một vật tư trong cùng lần thêm.");
+      }
+
+      return Promise.all(
+        payloads.map((payload) => treatmentRecordsApi.addMaterial(materialRecord.id, payload)),
+      );
     },
     onSuccess: async () => {
       toast.success("Đã thêm vật tư điều trị");
       setMaterialRecord(null);
+      setMaterialRows([createEmptyMaterialRow()]);
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["inventory"] }),
         queryClient.invalidateQueries({ queryKey: ["treatment-record-materials"] }),
@@ -442,6 +469,8 @@ export function TreatmentRecordsPage() {
             <TableBody>
               {paginatedRecords.map((record) => {
                 const invoice = invoiceByRecordId.get(record.id);
+                const dentistLockedByPaidInvoice = role === "dentist" && invoice?.status === "paid";
+                const hasInvoice = Boolean(invoice);
 
                 return (
                   <TableRow key={record.id}>
@@ -485,7 +514,12 @@ export function TreatmentRecordsPage() {
                             variant="outline"
                             size="icon"
                             aria-label="Sửa hồ sơ điều trị"
-                            title="Sửa hồ sơ điều trị"
+                            title={
+                              dentistLockedByPaidInvoice
+                                ? "Hóa đơn đã thanh toán nên nha sĩ không thể sửa hồ sơ"
+                                : "Sửa hồ sơ điều trị"
+                            }
+                            disabled={dentistLockedByPaidInvoice}
                             onClick={() => {
                               setEditingRecord(record);
                               setFormOpen(true);
@@ -494,7 +528,7 @@ export function TreatmentRecordsPage() {
                             <Pencil className="h-4 w-4" />
                           </Button>
                         )}
-                        {can("treatmentRecords.write") && !invoice && (
+                        {can("treatmentRecords.write") && !hasInvoice && (
                           <Button
                             variant="outline"
                             size="icon"
@@ -505,7 +539,22 @@ export function TreatmentRecordsPage() {
                             <Package className="h-4 w-4" />
                           </Button>
                         )}
-                        {can("invoices.fromTreatment") && !invoice && (
+                        {can("treatmentRecords.write") && hasInvoice && (
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            aria-label="Đã khóa vật tư theo hóa đơn"
+                            title={
+                              dentistLockedByPaidInvoice
+                                ? "Hóa đơn đã thanh toán nên nha sĩ không thể thêm vật tư"
+                                : "Hồ sơ đã có hóa đơn nên không thể thêm vật tư"
+                            }
+                            disabled
+                          >
+                            <Package className="h-4 w-4" />
+                          </Button>
+                        )}
+                        {can("invoices.fromTreatment") && !hasInvoice && (
                           <Button
                             variant="outline"
                             size="icon"
@@ -516,7 +565,7 @@ export function TreatmentRecordsPage() {
                             <Receipt className="h-4 w-4" />
                           </Button>
                         )}
-                        {can("invoices.fromTreatment") && invoice && (
+                        {can("invoices.fromTreatment") && hasInvoice && (
                           <Button
                             variant="outline"
                             size="icon"
@@ -532,7 +581,12 @@ export function TreatmentRecordsPage() {
                             variant="destructive"
                             size="icon"
                             aria-label="Xóa hồ sơ điều trị"
-                            title="Xóa hồ sơ điều trị"
+                            title={
+                              dentistLockedByPaidInvoice
+                                ? "Hóa đơn đã thanh toán nên nha sĩ không thể xóa hồ sơ"
+                                : "Xóa hồ sơ điều trị"
+                            }
+                            disabled={dentistLockedByPaidInvoice}
                             onClick={() => setDeleteRecord(record)}
                           >
                             <Trash2 className="h-4 w-4" />
@@ -614,7 +668,9 @@ export function TreatmentRecordsPage() {
               </TableHeader>
               <TableBody>
                 {(materialsQuery.data || []).map((material) => {
-                  const locked = materialsRecord ? invoiceByRecordId.has(materialsRecord.id) : true;
+                  const invoice = materialsRecord ? invoiceByRecordId.get(materialsRecord.id) : null;
+                  const locked = Boolean(invoice);
+                  const dentistLockedByPaidInvoice = role === "dentist" && invoice?.status === "paid";
 
                   return (
                     <TableRow key={material.id}>
@@ -629,9 +685,11 @@ export function TreatmentRecordsPage() {
                               size="icon"
                               aria-label="Xóa vật tư"
                               title={
-                                locked
-                                  ? "Hồ sơ đã có hóa đơn nên không thể xóa vật tư"
-                                  : "Xóa vật tư"
+                                dentistLockedByPaidInvoice
+                                  ? "Hóa đơn đã thanh toán nên nha sĩ không thể xóa vật tư"
+                                  : locked
+                                    ? "Hồ sơ đã có hóa đơn nên không thể xóa vật tư"
+                                    : "Xóa vật tư"
                               }
                               disabled={locked}
                               onClick={() => {
@@ -655,17 +713,141 @@ export function TreatmentRecordsPage() {
       </Dialog>
 
       {can("treatmentRecords.write") && (
-        <CrudFormDialog
+        <Dialog
           open={Boolean(materialRecord)}
-          onOpenChange={(open) => !open && setMaterialRecord(null)}
-          title={materialRecord ? `Thêm vật tư · ${materialRecord.patientName}` : "Thêm vật tư"}
-          description="Vật tư được trừ kho ngay và sẽ được dùng khi tạo hóa đơn từ hồ sơ điều trị."
-          fields={buildMaterialFields(inventoryQuery.data || [])}
-          initialValues={{ inventoryId: "", quantity: "1", usageNote: "" }}
-          submitLabel="Thêm vật tư"
-          pending={addMaterialMutation.isPending}
-          onSubmit={async (values) => addMaterialMutation.mutateAsync(values)}
-        />
+          onOpenChange={(open) => {
+            if (!open) {
+              setMaterialRecord(null);
+              setMaterialRows([createEmptyMaterialRow()]);
+            }
+          }}
+        >
+          <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-4xl">
+            <DialogHeader>
+              <DialogTitle>
+                {materialRecord ? `Thêm vật tư · ${materialRecord.patientName}` : "Thêm vật tư"}
+              </DialogTitle>
+              <DialogDescription>
+                Chọn nhiều loại vật tư trong một lần. Mỗi dòng là một vật tư riêng và sẽ bị trừ kho ngay khi lưu.
+              </DialogDescription>
+            </DialogHeader>
+            <form
+              className="space-y-4"
+              onSubmit={async (event) => {
+                event.preventDefault();
+                await addMultipleMaterialsMutation.mutateAsync(materialRows);
+              }}
+            >
+              <div className="space-y-3">
+                {materialRows.map((row, index) => (
+                  <div
+                    key={`material-row-${index}`}
+                    className="grid gap-3 rounded-xl border border-slate-200 p-4 md:grid-cols-[minmax(0,1.4fr)_120px_minmax(0,1fr)_auto]"
+                  >
+                    <div className="space-y-2">
+                      <Label htmlFor={`material-inventory-${index}`}>Vật tư *</Label>
+                      <Select
+                        value={row.inventoryId}
+                        onValueChange={(value) =>
+                          setMaterialRows((current) =>
+                            current.map((entry, entryIndex) =>
+                              entryIndex === index ? { ...entry, inventoryId: value } : entry,
+                            ),
+                          )
+                        }
+                      >
+                        <SelectTrigger id={`material-inventory-${index}`}>
+                          <SelectValue placeholder="Chọn vật tư" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {(inventoryQuery.data || []).map((item) => (
+                            <SelectItem key={item.id} value={item.id}>
+                              {`${item.name} · tồn ${item.stock} ${item.unit}`}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor={`material-quantity-${index}`}>Số lượng *</Label>
+                      <Input
+                        id={`material-quantity-${index}`}
+                        type="number"
+                        min="1"
+                        value={row.quantity}
+                        onChange={(event) =>
+                          setMaterialRows((current) =>
+                            current.map((entry, entryIndex) =>
+                              entryIndex === index ? { ...entry, quantity: event.target.value } : entry,
+                            ),
+                          )
+                        }
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor={`material-note-${index}`}>Ghi chú sử dụng</Label>
+                      <Textarea
+                        id={`material-note-${index}`}
+                        value={row.usageNote}
+                        onChange={(event) =>
+                          setMaterialRows((current) =>
+                            current.map((entry, entryIndex) =>
+                              entryIndex === index ? { ...entry, usageNote: event.target.value } : entry,
+                            ),
+                          )
+                        }
+                        placeholder={
+                          row.inventoryId
+                            ? `Ghi chú cho ${inventoryById.get(row.inventoryId)?.name || "vật tư"}`
+                            : "Ghi chú sử dụng"
+                        }
+                      />
+                    </div>
+                    <div className="flex items-end">
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        disabled={materialRows.length === 1}
+                        onClick={() =>
+                          setMaterialRows((current) => current.filter((_, entryIndex) => entryIndex !== index))
+                        }
+                      >
+                        Xóa
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-sm text-muted-foreground">Mỗi dòng là một loại vật tư khác nhau.</p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setMaterialRows((current) => [...current, createEmptyMaterialRow()])}
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Thêm loại vật tư
+                </Button>
+              </div>
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={addMultipleMaterialsMutation.isPending}
+                  onClick={() => {
+                    setMaterialRecord(null);
+                    setMaterialRows([createEmptyMaterialRow()]);
+                  }}
+                >
+                  Hủy
+                </Button>
+                <Button type="submit" disabled={addMultipleMaterialsMutation.isPending}>
+                  Thêm vật tư
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
       )}
 
       {can("treatmentRecords.write") && (

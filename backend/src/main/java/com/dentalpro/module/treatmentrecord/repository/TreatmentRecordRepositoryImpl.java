@@ -113,6 +113,11 @@ public class TreatmentRecordRepositoryImpl implements TreatmentRecordRepository 
     }
 
     @Override
+    public String findInventoryUnit(String inventoryId) {
+        return jdbcTemplate.queryForObject("SELECT unit FROM inventory WHERE id = ?", String.class, inventoryId);
+    }
+
+    @Override
     public void insertMaterial(String id, String recordId, AddTreatmentMaterialRequest request) {
         jdbcTemplate.update("""
             INSERT INTO treatment_materials (id, treatment_record_id, inventory_id, quantity, usage_note)
@@ -153,6 +158,16 @@ public class TreatmentRecordRepositoryImpl implements TreatmentRecordRepository 
             recordId
         );
         return value != null && value > 0;
+    }
+
+    @Override
+    public String findInvoiceStatusForRecord(String recordId) {
+        List<String> statuses = jdbcTemplate.query(
+            "SELECT status FROM invoices WHERE treatment_record_id = ? ORDER BY issued_at DESC",
+            (rs, rowNum) -> rs.getString("status"),
+            recordId
+        );
+        return statuses.isEmpty() ? null : statuses.get(0);
     }
 
     @Override

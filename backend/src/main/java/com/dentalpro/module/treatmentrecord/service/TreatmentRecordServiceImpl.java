@@ -72,6 +72,7 @@ public class TreatmentRecordServiceImpl implements TreatmentRecordService {
     @Transactional
     public TreatmentRecordDto update(String email, String id, UpdateTreatmentRecordRequest request) {
         TreatmentRecordDto existing = getRecord(email, id);
+        ensureDentistCannotModifyPaidInvoiceRecord(email, id);
         String patientId = request.patientId() != null ? request.patientId() : existing.patientId();
         String appointmentId = request.appointmentId() != null ? request.appointmentId() : existing.appointmentId();
         String dentistId = request.dentistId() != null ? request.dentistId() : existing.dentistId();
@@ -89,10 +90,7 @@ public class TreatmentRecordServiceImpl implements TreatmentRecordService {
     @Transactional
     public void delete(String email, String id) {
         getRecord(email, id);
-        List<TreatmentMaterialDto> materials = treatmentRecordRepository.findMaterialsByRecordId(id);
-        for (TreatmentMaterialDto material : materials) {
-            treatmentRecordRepository.incrementInventoryStock(material.inventoryId(), material.quantity());
-        }
+        ensureDentistCannotModifyPaidInvoiceRecord(email, id);
         treatmentRecordRepository.deleteMaterialsByRecordId(id);
         treatmentRecordRepository.deleteRecord(id);
     }
@@ -107,21 +105,25 @@ public class TreatmentRecordServiceImpl implements TreatmentRecordService {
     @Transactional
     public TreatmentMaterialDto addMaterial(String email, String recordId, AddTreatmentMaterialRequest request) {
         getRecord(email, recordId);
+        ensureDentistCannotModifyPaidInvoiceRecord(email, recordId);
         ensureRecordNotInvoiced(recordId);
         if (request.quantity() <= 0) {
             throw new BadRequestException("Material quantity must be greater than 0");
         }
         Integer stock = treatmentRecordRepository.findInventoryStock(request.inventoryId());
         if (stock == null) {
-            throw new ResourceNotFoundException("Inventory item not found");
+            throw new ResourceNotFoundException("Không tìm thấy vật tư trong kho");
         }
         if (stock < request.quantity()) {
-            throw new BadRequestException("Not enough inventory stock for this material");
+            String unit = treatmentRecordRepository.findInventoryUnit(request.inventoryId());
+            if (stock <= 0) {
+                throw new BadRequestException("Vật tư này đã hết hàng trong kho");
+            }
+            throw new BadRequestException("Vật tư không đủ tồn kho. Hiện chỉ còn " + stock + " " + unit);
         }
 
         String id = UUID.randomUUID().toString();
         treatmentRecordRepository.insertMaterial(id, recordId, request);
-        treatmentRecordRepository.decrementInventoryStock(request.inventoryId(), request.quantity());
         return treatmentRecordRepository.findMaterialById(id);
     }
 
@@ -129,6 +131,7 @@ public class TreatmentRecordServiceImpl implements TreatmentRecordService {
     @Transactional
     public void deleteMaterial(String email, String recordId, String materialId) {
         getRecord(email, recordId);
+        ensureDentistCannotModifyPaidInvoiceRecord(email, recordId);
         ensureRecordNotInvoiced(recordId);
 
         TreatmentMaterialDto material;
@@ -140,8 +143,6 @@ public class TreatmentRecordServiceImpl implements TreatmentRecordService {
         if (!recordId.equals(material.treatmentRecordId())) {
             throw new ResourceNotFoundException("Treatment material not found");
         }
-
-        treatmentRecordRepository.incrementInventoryStock(material.inventoryId(), material.quantity());
         treatmentRecordRepository.deleteMaterial(materialId);
     }
 
@@ -160,6 +161,19 @@ public class TreatmentRecordServiceImpl implements TreatmentRecordService {
 
         if ("dentist".equals(role) && !userId.equals(dentistId)) {
             throw new BadRequestException("Nha sĩ chỉ được quản lý hồ sơ điều trị của chính mình");
+        }
+    }
+
+    private void ensureDentistCannotModifyPaidInvoiceRecord(String email, String recordId) {
+        Map<String, Object> account = resolveAccount(email);
+        String role = String.valueOf(account.get("role"));
+        if (!"dentist".equals(role)) {
+            return;
+        }
+
+        String invoiceStatus = treatmentRecordRepository.findInvoiceStatusForRecord(recordId);
+        if ("paid".equalsIgnoreCase(invoiceStatus)) {
+            throw new BadRequestException("Dentists cannot modify treatment records or materials after the invoice is paid");
         }
     }
 

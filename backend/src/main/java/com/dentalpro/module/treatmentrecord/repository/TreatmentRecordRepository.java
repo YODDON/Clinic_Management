@@ -21,12 +21,14 @@ public interface TreatmentRecordRepository {
     void deleteRecord(String id);
     List<TreatmentMaterialDto> findMaterialsByRecordId(String recordId);
     Integer findInventoryStock(String inventoryId);
+    String findInventoryUnit(String inventoryId);
     void insertMaterial(String id, String recordId, AddTreatmentMaterialRequest request);
     void decrementInventoryStock(String inventoryId, int quantity);
     void incrementInventoryStock(String inventoryId, int quantity);
     TreatmentMaterialDto findMaterialById(String id);
     void deleteMaterial(String id);
     boolean invoiceExistsForRecord(String recordId);
+    String findInvoiceStatusForRecord(String recordId);
     boolean patientExists(String patientId);
     boolean dentistExists(String dentistId);
     List<Map<String, Object>> findAppointmentRelation(String appointmentId);

@@ -222,7 +222,11 @@ export function InvoicesPage() {
   }, 0);
 
   const refreshInvoices = async () => {
-    await queryClient.invalidateQueries({ queryKey: ["invoices"] });
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ["invoices"] }),
+      queryClient.invalidateQueries({ queryKey: ["inventory"] }),
+      queryClient.invalidateQueries({ queryKey: ["inventory", "low-stock"] }),
+    ]);
   };
 
   const createInvoiceMutation = useMutation({

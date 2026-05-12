@@ -176,6 +176,8 @@ export function InventoryPage() {
   const inventoryQuery = useQuery({
     queryKey: ["inventory"],
     queryFn: async () => (await inventoryApi.list()).content,
+    refetchInterval: 10000,
+    refetchOnWindowFocus: true,
   });
 
   const items = (inventoryQuery.data || []).filter((item) => {

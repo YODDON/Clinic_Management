@@ -113,6 +113,47 @@ public class InvoiceRepositoryImpl implements InvoiceRepository {
     }
 
     @Override
+    public boolean isInventoryDeducted(String invoiceId) {
+        Boolean value = jdbcTemplate.queryForObject(
+            "SELECT stock_deducted FROM invoices WHERE id = ?",
+            Boolean.class,
+            invoiceId
+        );
+        return Boolean.TRUE.equals(value);
+    }
+
+    @Override
+    public void markInventoryDeducted(String invoiceId) {
+        jdbcTemplate.update("UPDATE invoices SET stock_deducted = TRUE WHERE id = ?", invoiceId);
+    }
+
+    @Override
+    public List<Map<String, Object>> findInventoryItemsByInvoiceId(String invoiceId) {
+        return jdbcTemplate.queryForList("""
+            SELECT ii.inventory_id,
+                   ii.description,
+                   ii.quantity,
+                   i.name AS inventory_name,
+                   i.unit AS inventory_unit
+            FROM invoice_items ii
+            JOIN inventory i ON i.id = ii.inventory_id
+            WHERE ii.invoice_id = ?
+              AND ii.inventory_id IS NOT NULL
+            ORDER BY ii.id DESC
+            """, invoiceId);
+    }
+
+    @Override
+    public Integer findInventoryStock(String inventoryId) {
+        return jdbcTemplate.queryForObject("SELECT stock FROM inventory WHERE id = ?", Integer.class, inventoryId);
+    }
+
+    @Override
+    public void decrementInventoryStock(String inventoryId, int quantity) {
+        jdbcTemplate.update("UPDATE inventory SET stock = stock - ? WHERE id = ?", quantity, inventoryId);
+    }
+
+    @Override
     public void deleteInvoiceItems(String invoiceId) {
         jdbcTemplate.update("DELETE FROM invoice_items WHERE invoice_id = ?", invoiceId);
     }

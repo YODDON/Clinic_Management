@@ -185,8 +185,12 @@ public class InvoiceServiceImpl implements InvoiceService {
     }
 
     @Override
+    @Transactional
     public InvoiceDto updateStatus(String email, String id, UpdateInvoiceStatusRequest request) {
-        getInvoice(email, id);
+        InvoiceDto current = getInvoice(email, id);
+        if ("paid".equalsIgnoreCase(request.status()) && !"paid".equalsIgnoreCase(current.status())) {
+            applyInventoryDeductionIfNeeded(id);
+        }
         invoiceRepository.updateInvoiceStatus(id, request.status());
         return getInvoice(email, id);
     }
@@ -219,8 +223,45 @@ public class InvoiceServiceImpl implements InvoiceService {
         String id = UUID.randomUUID().toString();
         invoiceRepository.insertPayment(id, request, String.valueOf(account.get("id")));
         double nextRemaining = remaining - request.amount();
+        if (nextRemaining == 0) {
+            applyInventoryDeductionIfNeeded(request.invoiceId());
+        }
         invoiceRepository.updateInvoiceStatus(request.invoiceId(), nextRemaining == 0 ? "paid" : "pending");
         return invoiceRepository.findPaymentById(id);
+    }
+
+    private void applyInventoryDeductionIfNeeded(String invoiceId) {
+        if (invoiceRepository.isInventoryDeducted(invoiceId)) {
+            return;
+        }
+
+        List<Map<String, Object>> inventoryItems = invoiceRepository.findInventoryItemsByInvoiceId(invoiceId);
+        for (Map<String, Object> item : inventoryItems) {
+            String inventoryId = (String) item.get("inventory_id");
+            String inventoryName = String.valueOf(item.get("inventory_name"));
+            String unit = String.valueOf(item.get("inventory_unit"));
+            int quantity = item.get("quantity") instanceof Number number ? number.intValue() : 0;
+            Integer stock = invoiceRepository.findInventoryStock(inventoryId);
+
+            if (stock == null) {
+                throw new ResourceNotFoundException("Không tìm thấy vật tư " + inventoryName + " trong kho");
+            }
+            if (stock < quantity) {
+                if (stock <= 0) {
+                    throw new BadRequestException("Không thể thanh toán vì vật tư \"" + inventoryName + "\" đã hết hàng trong kho");
+                }
+                throw new BadRequestException(
+                    "Không thể thanh toán vì vật tư \"" + inventoryName + "\" không đủ tồn kho. Hiện chỉ còn " + stock + " " + unit
+                );
+            }
+        }
+
+        for (Map<String, Object> item : inventoryItems) {
+            String inventoryId = (String) item.get("inventory_id");
+            int quantity = item.get("quantity") instanceof Number number ? number.intValue() : 0;
+            invoiceRepository.decrementInventoryStock(inventoryId, quantity);
+        }
+        invoiceRepository.markInventoryDeducted(invoiceId);
     }
 
     private void validateInvoiceRelation(String patientId, String appointmentId) {
